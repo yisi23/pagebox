@@ -1,5 +1,7 @@
 # OriginMap: Tool & Guard
 
+![XHR](http://f.cl.ly/items/0y3n0a3C261X2Y3X1V2q/demo%20\(1\).png)
+
 ## TL;DR
 This is a really awesome feature (trust me im an infosec engineer) which can dramatically improve XSS protection and overall access security for huge and complex websites. 
 
@@ -22,10 +24,6 @@ Also every page contains additional origin map container in `<meta>` tag (Implem
 Server side checks container integrity and authorizes request if permission is allowed.
 
 ## Interactions
-
-XHR demo - on the left Red arrows are arbitary requests attacker can do. on the right we map origins and restrict access
-
-![XHR](http://f.cl.ly/items/0y3n0a3C261X2Y3X1V2q/demo%20\(1\).png)
 
 Frames and windows same-origin demo - Sandbox CSP header denies all same-domain interaction, use postMessage instead:
 
