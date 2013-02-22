@@ -2,27 +2,62 @@ require 'sinatra'
 require './originmap'
 require 'securerandom'
 
+
+class Preflight
+  def initialize(app)
+    @app = app
+  end
+
+  def call(env)
+    heads = {'Access-Control-Allow-Origin' => '*', 
+            'Access-Control-Allow-Headers' => 'Origin-Map,X-CSRF-Token,Content-Type'}
+   
+    puts 'Received ENV', env
+    # request from sandbox and XHR
+    if env['HTTP_ORIGIN'] == 'null' and !env['HTTP_ORIGIN_MAP']
+      #env["REQUEST_METHOD"] == 'OPTIONS'
+      if env['QUERY_STRING'].include?('origin_map=')
+        # must be last param, for now
+        origin_map = env['QUERY_STRING'].split('origin_map=').last
+        # check integrity and access ..
+        puts 'Checking integrity of', origin_map
+
+        if true
+
+          [200, heads, ['Access granted!']]
+        end
+      end
+    else
+      resp = @app.call(env)
+      resp[1].merge!(heads)
+      puts 'response', resp[1]
+      resp
+    end
+  end
+end
+
+
 SECRET = 'abcd'
 default_headers = {
-	"Content-Security-Policy" => 'sandbox;',
-	"X-XSS-Protection" => '0;'
+  "Content-Security-Policy" => 'sandbox;',
+  "X-XSS-Protection" => '0;'
 }
 
 
 def map_origin(path)
-	case path
+  case path
 
-	when '/about'
-		:no
-	else
-		:default
-	end
+  when '/about'
+    :no
+  else
+    :default
+  end
 end
 
 
 
 def csrf_token
-	session[:_csrf_token] == SecureRandom.base64(30)
+  session[:_csrf_token] == SecureRandom.base64(30)
 end
 
 def layout(body)
@@ -48,18 +83,18 @@ get '/payments/new' do
 end
 
 post '/payments' do
-	#PAYMENT!
+  #PAYMENT!
 
 
 
-	#request.xhr?.to_s
+  #request.xhr?.to_s
   
 
 end
 
 
 get '/about' do
-	val = 'Sandbox allow-scripts allow-top-navigation allow-forms'
+  val = 'Sandbox allow-scripts allow-top-navigation allow-forms'
   headers["Content-Security-Policy"]=val
   headers["X-WebKit-CSP"]=val
 
