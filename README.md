@@ -6,20 +6,25 @@
 This is a really awesome feature (trust me im an infosec engineer) which can dramatically improve XSS protection and overall access security for huge and complex websites. 
 
 ## Bulletproof web application
-This is a concept of **bulletproof web applications**. Web is not perfect. Web is far from perfect: Cookies, Clickjacking, Frame navigation, CSRF,  links..
+**OriginMap** is a conception of a **bulletproof web application**. Web is not perfect. Our web is far from perfect: [Cookies](http://homakov.blogspot.com/2013/02/rethinking-cookies-originonly.html), [Clickjacking](http://homakov.blogspot.com/2012/06/saferweb-with-new-features-come-new.html), [Frame navigation](http://homakov.blogspot.com/2013/02/cross-origin-madness-or-your-frames-are.html), [CSRF](http://homakov.blogspot.com/2012/03/hacking-skrillformer-moneybookers.html) etc
 Speaking about XSS web is **just broken**.
 
-When we find XSS at `/some_path` we do requests and read responses from **anywhere on the whole website** on this domain. 
+When we find XSS at `/some_path` we can make authorized requests and read responses from **anywhere on the whole website** on this domain. 
 
 XSS on `/about`, which is just a static page not using server side at all **leads to stolen money on `/withdraw`.**
 
 **This is wrong.**
-## Next level of XSS protection
+## Next level of XSS protection: Page Scope
 The idea I'm implementing is to make every page **independent and secure** from others, potentionally vulnerable pages located on the same domain. To make website work developer creates an origin map - he connects **page origins** with **what they are allowed to do**. 
 
 OriginMap **splits** the entire website into many pages with unique origins. Every page is not accessible from other pages unless developer allowed it explicitly - you simply **cannot** `window.open/<iframe>` other pages on the same domain to extract `document.body.innerHTML` because of header CSP: Sandbox.
 
-Also every page contains additional origin map container in `<meta>` tag (Implementations of the concept can vary, this is how Rails adds csrf tokens), and sends it along with every `XMLHttpRequest` and `<form>` submission. It is **signed serialized object** (e.g. JSON)  containing `url` property - original page URL (not `location.href` which can be compromised with history.pushState), `perms` - permissions granted for this page and `params` - restricting specific params values to simplify server-side business logic. 
+Also every page contains additional origin map container in `<meta>` tag (Implementations of the concept can vary, this is how Rails adds csrf tokens), and sends it along with every `XMLHttpRequest` and `<form>` submission. It is **signed serialized object** (e.g. JSON)  containing various values.
+
+It can be: `url` property - original page URL (not `location.href` which can be compromised with history.pushState), `perms` - permissions granted for this page and `params` - restricting specific params values to simplify server-side business logic. 
+
+**PageScope** is a ruby implementation or permission-based OriginMap conception. Every page has 'scope' dedicated for this origin. Page can only execute request authorized for scope this page has. Scope can look like: `["follow", "write_message", "read_messages", "edit_account", "delete_account"]`. Or it can be more high-level:
+`["default", "basic", "edit_resource", "show_secret"]`
 
 Server side checks container integrity and authorizes request if permission is allowed.
 
