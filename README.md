@@ -7,7 +7,7 @@
 ![](http://f.cl.ly/items/3i152w2l243d2W1r0K3P/sameorig.png)
 
 
-![](http://f.cl.ly/items/2s2B060O1d0N1D3b0U1B/somthn%20(1).png)
+![](http://f.cl.ly/items/2s2B060O1d0N1D3b0U1B/somthn%20\(1\).png)
 
 This is a concept of bulletproof web applications. Web is not perfect. Web is far from perfect. Web is broken: Cookies, Clickjacking, Frame navigation, CSRF,  .
 Here is why:
