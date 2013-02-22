@@ -1,13 +1,14 @@
 # OriginMap: Tool & Guard
 ## What is OriginMap?
 
-![](http://f.cl.ly/items/0y3n0a3C261X2Y3X1V2q/demo%20\(1\).png)
+XHR demo
+![XHR](http://f.cl.ly/items/0y3n0a3C261X2Y3X1V2q/demo%20\(1\).png)
 
+Frames and windows same-origin demo:
+![frames](http://f.cl.ly/items/3i152w2l243d2W1r0K3P/sameorig.png)
 
-![](http://f.cl.ly/items/3i152w2l243d2W1r0K3P/sameorig.png)
-
-
-![](http://f.cl.ly/items/2s2B060O1d0N1D3b0U1B/somthn%20\(1\).png)
+Permitted origins demo:
+![permitted URLs](http://f.cl.ly/items/2s2B060O1d0N1D3b0U1B/somthn%20\(1\).png)
 
 This is a concept of bulletproof web applications. Web is not perfect. Web is far from perfect. Web is broken: Cookies, Clickjacking, Frame navigation, CSRF,  .
 Here is why:
