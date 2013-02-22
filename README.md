@@ -40,3 +40,28 @@ Implementations can vary, for example we can add such helper to `<head>`
 Where SIGNATURE is HMAC, in same way cookie is signed in Rails.
 With each request server side will check if `current_page_permissions.include?(:following)` and if it does - perform the action.
 This will dramatically improve XSS protection because XSS at /some_path will be basically useless if this some_path has no permissions.
+
+# Wait is it for security only?
+Here is the sweet part: Not only! This can change the way you write business logic. View template can look like:
+```
+form_for(current_user)
+  -om_perms[:users] << current_user.id
+  -for website in current_user.websites 
+    edit website..
+    -om_perms[:websites] << website.id
+```
+
+Look at generated origin map:
+```
+{
+	url: "/update_account",
+	perms: {
+    users: [3532],
+    websites: [345,346,348] 
+  }
+}
+```
+This origin map allows user to update only User with 3532 id and websites with id in (345,346,348). No server side validation is needed anymore - OM is signed with private key and user cannot tamper given map with permitted ids.
+
+
+
