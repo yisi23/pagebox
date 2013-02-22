@@ -1,31 +1,27 @@
 # OriginMap: Tool & Guard
 
 ## TL;DR
-This is a really awesome feature (trust me im an infosec engineer) which can dramatically improve XSS protection of complex websites. 
+This is a really awesome feature (trust me im an infosec engineer) which can dramatically improve XSS protection and overall access security for huge and complex websites. 
 
 ## Bulletproof web application
 This is a concept of **bulletproof web applications**. Web is not perfect. Web is far from perfect: Cookies, Clickjacking, Frame navigation, CSRF,  links..
 Speaking about XSS web is **just broken**.
 
-## Next level of XSS protection
-The idea I'm implementing is to make every page **independent and secure** from others, potentionally vulnerable pages located on the same domain.
-
-When we find XSS at `/some_path` we do requests and read responses from anywhere on the whole website on this domain. 
+When we find XSS at `/some_path` we do requests and read responses from **anywhere on the whole website** on this domain. 
 
 XSS on `/about`, which is just a static page not using server side at all **leads to stolen money on `/withdraw`.**
 
 **This is wrong.**
+## Next level of XSS protection
+The idea I'm implementing is to make every page **independent and secure** from others, potentionally vulnerable pages located on the same domain. To make website work developer creates an origin map - he connects **page origins** with **what they are allowed to do**. 
 
+OriginMap **splits** the entire website into many pages with unique origins. Every page is not accessible from other pages unless you allowed it explicitly - you simply **cannot** `window.open/<iframe>` other pages on the same domain to extract `document.body.innerHTML` because of header CSP: Sandbox.
 
+Also every page contains additional origin map container in `<meta>` tag (Implementations of the concept can vary, this is how Rails adds csrf tokens), and sends it along with every `XMLHttpRequest` and `<form>` submission. It is **signed serialized object** (e.g. JSON)  containing `url` property - original page URL (not `location.href` which can be compromised with history.pushState), `perms` - permissions granted for this page and `params` - restricting specific params values to simplify server-side business logic. 
 
-OriginMap **splits** the entire website into many pages with unique origins. Every page has its own Origin in terms of frame navigation - you simply **cannot** `window.open/<iframe>` other pages on the same domain to extract `document.body.innerHTML` because of header CSP: Sandbox.
+Server side checks container integrity and authorizes request if permission is allowed.
 
-Also every page contains additional `OriginMapObject` in `<meta>` tag, and sends it along with every `XMLHttpRequest` and `<form>` submission. 
-
-**OriginMapObject** is **signed serialized object** (e.g. JSON)  containing `url` property - original page URL (not `location.href` which can be compromised with history.pushState), `perms` - permissions granted for this page and `params` - restricting specific params values to simplify server-side business logic.
-
-
-## What is OriginMap?
+## Interactions
 
 XHR demo - on the left Red arrows are arbitary requests attacker can do. on the right we map origins and restrict access
 
@@ -39,53 +35,68 @@ Permitted origins demo - how meta tag has information on what was permitted to t
 
 ![permitted URLs](http://f.cl.ly/items/2s2B060O1d0N1D3b0U1B/somthn%20\(1\).png)
 
-##Attack Surface.
+## Attack Surface.
 Now any XSS pwns the entire website:
+
 1 page surface * amount of all pages.
 
 With OriginMap XSS can only pwn functionaly available for XSS-ed page: 
+
 1 page surface * amount of pages that serve given functionality.
 
-
-
-I want to change the current situation by adding *Authorization technology* for pages. Every page will have it's own unique origin and will serve such header:
-```
-Content-Security-Policy: sandbox;
-```
-this will disallow hacked `/some_path` to extract content from `/secret` and make requests on other endpoints.
-
-Implementations of the concept can be different, for example we can add such meta tag to `<head>`, just like Rails adds csrf tokens
+## Signature
 ```
 <meta name="permissions" content="following,edit_account,new_status--SIGNATURE">
 ```
 Where SIGNATURE is HMAC, signed same way as Rails cookie.
 With each request server side will check something like `if current_page_permissions.include?(:following)` or with more handy DSL.
 
-This will dramatically improve **complex websites** security (like facebook, paypal or google), which are often pwned with ridiculously simple XSSes on static pages or with external libraries' vulnerabilities. 
-
-XSS at /some_path will be basically **useless** if this /some_path has no granted permissions.
 
 ## FAQ
 * Content Security Policy
-OriginMap takes adventadge of it. But CSP on itself is not panacea from XSS: DOM XSS, JSONP bypasses
-* rely on Referrer
+OriginMap takes adventadge of it. But CSP on itself is not panacea from XSS: DOM XSS (there are always a lot of ways to insert HTML leading to execution), [JSONP bypasses](http://homakov.blogspot.com/2013/02/are-you-sure-you-use-jsonp-properly.html)
+
+* Rely on Referrer as OriginPage header
 when I see someone using [referrer as a security measurement I cry](http://homakov.blogspot.com/2012/04/playing-with-referer-origin-disquscom.html). Seriously.
 
-## OriginMap advantadges:
-...
+* Subdomains
+Yes you can use subdomains to extract functionality. You can end up.
+1) follow.site.com
+2) transfermoney.site.com
+3) readmessages.site.com
+4) createapost.site.com
+... Also at the end of the day I will hack your Single Sign On. :P
+
+* Rich Internet Applications
+If your app consists of one or two pages this feature will not decrease attack surface a lot. But it still can be useful.
+
+* What apps need it the most?
+
+This will dramatically improve **complex websites** security (like facebook, paypal or google), which are often pwned with ridiculously simple XSSes on static pages or with external libraries' vulnerabilities.
+
+XSS at /some_path will be basically **useless** if this /some_path has no granted permissions. If you don't permit anything for /static/page you can leave an XSS reflector and make fun of script kiddies trying to exploit other pages with it.
 
 ## Types of OriginMap
 
 * URL-based
+Detection of given permissions by checking origin page url. 
+`perms << :edit_account if origin_url == '/edit_account'`
+
 * Permissions-based
+
+When you create and sign permissions **in views**.
+```
+-om_perm << :edit_account
+=form_for current_user
+  ..here we edit current user
+```
 * Signed params-based
+When you sign params and some of their constant values. Like strong_params but views-based. Feature for 2 version, maybe.
 
-
-# Can I start using it to make my app super secure?
+## Can I start using it to make my app super secure NOW?
 The thing is, you **cannot differ XMLHttpRequest from normal browser request**. XHR: 
 `x=new XMLHttpRequest;x.open('get','payments/new');x.send();`
-can read responseText of **any** page because we cannot detect the initiator of the request - was it just a new tab or was it attacker's XSS stealing content. Thus he can read `<meta>` containing any origin_map -> execute any POST authorized with any origin_map. This makes OriginMap technique not usable. Sorry.
-
+can read responseText of **any** page because we cannot detect the initiator of the request - was it just a new tab or was it attacker's XSS stealing content. Thus he can read `<meta>` containing any origin_map -> execute any POST authorized with any origin_map. This makes OriginMap technique harder. 
 
 
 
