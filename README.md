@@ -13,10 +13,7 @@ Permitted origins demo - how meta tag has information on what was permitted to t
 
 ![permitted URLs](http://f.cl.ly/items/2s2B060O1d0N1D3b0U1B/somthn%20\(1\).png)
 
-## Attack Surface for certain functionality
-Before = 1 page surface * amount of all pages
-Now = 1 page surface * amount of pages that serve given functionality
-
+## Bulletproof web application
 This is a concept of **bulletproof web applications**. Web is not perfect. Web is far from perfect. Web is broken: Cookies, Clickjacking, Frame navigation, CSRF,  links..
 
 OriginMap **splits** the entire website into many pages with unique origins. Every page has its own Origin in terms of frame navigation - you simply **cannot** `window.open/<iframe>` other pages on the same domain to extract `document.body.innerHTML` because of header CSP: Sandbox.
@@ -25,7 +22,14 @@ Also every page contains additional `OriginMapObject` in `<meta>` tag, and sends
 
 **OriginMapObject** is **signed JSON** payload containing `url` property - current page URL (not `location.href` which can be changed with history.pushState), `perms` - permissions granted for this page and `params` - restricting specific params values to simplify server-side business logic.
 
-## OriginMap: Next level of XSS protection
+##Attack Surface.
+Now any XSS pwns the entire website:
+1 page surface * amount of all pages.
+
+With OriginMap XSS can only pwn functionaly available for XSS-ed page: 
+1 page surface * amount of pages that serve given functionality.
+
+## Next level of XSS protection
 The idea I'm implementing prototype of is to make every page **independent and secure** from others, probably vulnerable pages located on the same domain. 
 
 When we find XSS at `/some_path` we do requests and read responses from anywhere on the whole website on this domain. 
@@ -63,7 +67,15 @@ OriginMap takes adventadge of it. But CSP on itself is not panacea from XSS, her
 * Permissions-based
 * Signed params-based
 
-## OriginMap as view-based business logic.
+
+# Known problems with OriginMap implementation
+The thing is, you cannot differ normal XMLHttpRequest made with 
+`x=new XMLHttpRequest;x.open('get','payments/new');x.send();`
+will be able to read responseText just like it was made by a browser. This is a very bad problem because we cannot restrict access and it simply bypasses sendbox for GETting data.
+By now we only can sendbox writing data.
+I hope browsers will add a reliable header for XHR.
+
+## OriginMap 2.0 as view-based business logic. (possible feature)
 Here is the sweet part: this can change the way you write business logic. Template can look like this:
 ```
 form_for(current_user)
