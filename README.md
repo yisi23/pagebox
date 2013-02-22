@@ -1,7 +1,7 @@
 # OriginMap: Tool & Guard
 
 ## TL;DR
-This is a really awesome feature (trust me im an infosec engineer) which can dramatically improve XSS protection of complex websites. But there is no working PoC for a reason: it cannot be implemented because of one browser fundamental problem. Please read the entire README and decide if you need it..
+This is a really awesome feature (trust me im an infosec engineer) which can dramatically improve XSS protection of complex websites. 
 
 ## Bulletproof web application
 This is a concept of **bulletproof web applications**. Web is not perfect. Web is far from perfect: Cookies, Clickjacking, Frame navigation, CSRF,  links..
@@ -81,16 +81,11 @@ when I see someone using [referrer as a security measurement I cry](http://homak
 * Signed params-based
 
 
-# It's so cool, Egor! Can I start using it to make my app super secure?
+# Can I start using it to make my app super secure?
 The thing is, you **cannot differ XMLHttpRequest from normal browser request**. XHR: 
 `x=new XMLHttpRequest;x.open('get','payments/new');x.send();`
 can read responseText of **any** page because we cannot detect the initiator of the request - was it just a new tab or was it attacker's XSS stealing content. Thus he can read `<meta>` containing any origin_map -> execute any POST authorized with any origin_map. This makes OriginMap technique not usable. Sorry.
 
-I **really really** hope you guys can help me to make browsers implement one of the following things:
-* (X-)OriginPage header sent along with all same-domain requests to determine page-initiator.
-* Reliable way to detect XHR, most likely X-Requested-With: XMLHttpRequest by default.
-
-Don't kill my dream of bulletproof apps :(
 
 
 
