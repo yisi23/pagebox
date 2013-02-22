@@ -3,6 +3,7 @@
 This is a concept of bulletproof web applications. Web is not perfect. Web is far from perfect. Web is broken: Cookies, Clickjacking, Frame navigation, CSRF,  .
 Here is why:
 
+OriginMap _splits_ the entire website into many pages with unique origins. Every page has its own Origin in terms of frame navigation - you simply cannot `window.open` or iframe it and extract `document.body.innerHTML`. And every page contains additional `OriginMapObject` which has `url` - current page URL, `perms` - permissions granted for this page and `params` - restricting specific params values to simplify business logic.
 
 ## OriginMap: Next level of XSS protection
 The idea i'm implementing prototype of is OriginMap. When we find XSS at /some_path we can pwn and do requests and read responses from anywhere on the whole website on this domain. I want to change this situation by adding Authorization technology for pages. Every page will have unique origin and will serve header:
