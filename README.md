@@ -1,4 +1,15 @@
 # OriginMap: Tool & Guard
+
+## Bulletproof web application
+This is a concept of **bulletproof web applications**. Web is not perfect. Web is far from perfect. Web is broken: Cookies, Clickjacking, Frame navigation, CSRF,  links..
+
+OriginMap **splits** the entire website into many pages with unique origins. Every page has its own Origin in terms of frame navigation - you simply **cannot** `window.open/<iframe>` other pages on the same domain to extract `document.body.innerHTML` because of header CSP: Sandbox.
+
+Also every page contains additional `OriginMapObject` in `<meta>` tag, and sends it along with every `XMLHttpRequest` and `<form>` submission. 
+
+**OriginMapObject** is **signed serialized object** (e.g. JSON)  containing `url` property - original page URL (not `location.href` which can be compromised with history.pushState), `perms` - permissions granted for this page and `params` - restricting specific params values to simplify server-side business logic.
+
+
 ## What is OriginMap?
 
 XHR demo - on the left Red arrows are arbitary requests attacker can do. on the right we map origins and restrict access
@@ -12,15 +23,6 @@ Frames and windows same-origin demo - Sandbox CSP header denies all same-domain 
 Permitted origins demo - how meta tag has information on what was permitted to this URL.
 
 ![permitted URLs](http://f.cl.ly/items/2s2B060O1d0N1D3b0U1B/somthn%20\(1\).png)
-
-## Bulletproof web application
-This is a concept of **bulletproof web applications**. Web is not perfect. Web is far from perfect. Web is broken: Cookies, Clickjacking, Frame navigation, CSRF,  links..
-
-OriginMap **splits** the entire website into many pages with unique origins. Every page has its own Origin in terms of frame navigation - you simply **cannot** `window.open/<iframe>` other pages on the same domain to extract `document.body.innerHTML` because of header CSP: Sandbox.
-
-Also every page contains additional `OriginMapObject` in `<meta>` tag, and sends it along with every `XMLHttpRequest` and `<form>` submission. 
-
-**OriginMapObject** is **signed JSON** payload containing `url` property - current page URL (not `location.href` which can be changed with history.pushState), `perms` - permissions granted for this page and `params` - restricting specific params values to simplify server-side business logic.
 
 ##Attack Surface.
 Now any XSS pwns the entire website:
@@ -71,13 +73,17 @@ OriginMap takes adventadge of it. But CSP on itself is not panacea from XSS, her
 # It's so cool, Egor! Can I start using it to make my app super secure?
 The thing is, you **cannot differ XMLHttpRequest from normal browser request**. XHR: 
 `x=new XMLHttpRequest;x.open('get','payments/new');x.send();`
-can read responseText of **any** page because we cannot detect the initiator of a request, was it you opening a new tab or was it attacker's XSS. He can read `<meta>` containing any origin_map. This makes OriginMap technique not usable. Sorry.
+can read responseText of **any** page because we cannot detect the initiator of a request, was it you opening a new tab or was it attacker's XSS. He can read `<meta>` containing any origin_map -> execute any POST authorized with any origin_map. This makes OriginMap technique not usable. Sorry.
 
-This is a very bad problem because we cannot restrict access and it simply bypasses sendbox for GETting data.
-By now we only can sendbox writing data.
-I hope browsers will add a reliable header for XHR.
+I **really really** hope you guys can help me to make browsers implement one of the following things:
+* (X-)OriginPage header sent along with all same-domain requests to determine page-initiator.
+* Reliable way to detect XHR, most likely X-Requested-With: XMLHttpRequest by default.
 
-## Bonus: OriginMap 2.0 as view-based business logic. (possible feature)
+Don't kill my dream of bulletproof apps :(
+
+
+
+## Bonus: OriginMap 2.0 as view-based business logic. (a possible feature)
 Here is another sweet feature: it can change the way you write business logic. Template can look like this:
 ```
 form_for(current_user)
@@ -86,7 +92,7 @@ form_for(current_user)
     edit website..
     -om_perms[:websites] << website.id
 ```
-or even simpler
+or even simpler DSL
 ```
 form_for(current_user, signed_data: {id: current_user.id})
 ```
