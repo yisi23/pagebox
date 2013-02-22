@@ -4,6 +4,7 @@
 ![](http://f.cl.ly/items/3l443C1V123c1c0G273p/demo.png)
 This is a concept of bulletproof web applications. Web is not perfect. Web is far from perfect. Web is broken: Cookies, Clickjacking, Frame navigation, CSRF,  .
 Here is why:
+
 ![](http://f.cl.ly/items/1q1I2f2N1o161D1o3f3G/somthn.png)
 
 OriginMap *splits* the entire website into many pages with unique origins. Every page has its own Origin in terms of frame navigation - you simply cannot `window.open` or iframe it and extract `document.body.innerHTML`. Also every page contains additional `OriginMapObject` in `<meta>` tag, and sends it with every `XMLHttpRequest` and `<form>` submission. `OriginMapObject` has `url` property - current page URL (not location.href which can be changed with history.pushState), `perms` - permissions granted for this page and `params` - restricting specific params values to simplify business logic.
