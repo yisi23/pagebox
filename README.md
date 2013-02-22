@@ -1,16 +1,17 @@
 # OriginMap: Tool & Guard
 ## What is OriginMap?
 
-![]('http://f.cl.ly/items/0y3n0a3C261X2Y3X1V2q/demo%20(1).png')
+![](http://f.cl.ly/items/0y3n0a3C261X2Y3X1V2q/demo%20(1).png)
 
-![]("http://f.cl.ly/items/3i152w2l243d2W1r0K3P/sameorig.png")
 
-![]('http://f.cl.ly/items/2s2B060O1d0N1D3b0U1B/somthn%20(1).png')
+![](http://f.cl.ly/items/3i152w2l243d2W1r0K3P/sameorig.png)
+
+
+![](http://f.cl.ly/items/2s2B060O1d0N1D3b0U1B/somthn%20(1).png)
 
 This is a concept of bulletproof web applications. Web is not perfect. Web is far from perfect. Web is broken: Cookies, Clickjacking, Frame navigation, CSRF,  .
 Here is why:
 
-![](http://f.cl.ly/items/1q1I2f2N1o161D1o3f3G/somthn.png)
 
 OriginMap *splits* the entire website into many pages with unique origins. Every page has its own Origin in terms of frame navigation - you simply cannot `window.open` or iframe it and extract `document.body.innerHTML`. Also every page contains additional `OriginMapObject` in `<meta>` tag, and sends it with every `XMLHttpRequest` and `<form>` submission. `OriginMapObject` has `url` property - current page URL (not location.href which can be changed with history.pushState), `perms` - permissions granted for this page and `params` - restricting specific params values to simplify business logic.
 
