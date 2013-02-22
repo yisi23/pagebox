@@ -68,15 +68,17 @@ OriginMap takes adventadge of it. But CSP on itself is not panacea from XSS, her
 * Signed params-based
 
 
-# Known problems with OriginMap implementation
-The thing is, you cannot differ normal XMLHttpRequest made with 
+# It's so cool, Egor! Can I start using it to make my app super secure?
+The thing is, you **cannot differ XMLHttpRequest from normal browser request**. XHR: 
 `x=new XMLHttpRequest;x.open('get','payments/new');x.send();`
-will be able to read responseText just like it was made by a browser. This is a very bad problem because we cannot restrict access and it simply bypasses sendbox for GETting data.
+can read responseText of **any** page because we cannot detect the initiator of a request, was it you opening a new tab or was it attacker's XSS. He can read `<meta>` containing any origin_map. This makes OriginMap technique not usable. Sorry.
+
+This is a very bad problem because we cannot restrict access and it simply bypasses sendbox for GETting data.
 By now we only can sendbox writing data.
 I hope browsers will add a reliable header for XHR.
 
-## OriginMap 2.0 as view-based business logic. (possible feature)
-Here is the sweet part: this can change the way you write business logic. Template can look like this:
+## Bonus: OriginMap 2.0 as view-based business logic. (possible feature)
+Here is another sweet feature: it can change the way you write business logic. Template can look like this:
 ```
 form_for(current_user)
   -om_perms[:users] << current_user.id
@@ -84,8 +86,7 @@ form_for(current_user)
     edit website..
     -om_perms[:websites] << website.id
 ```
-
-OR 
+or even simpler
 ```
 form_for(current_user, signed_data: {id: current_user.id})
 ```
@@ -101,6 +102,8 @@ This will generate such origin map:
 }
 ```
 The map allows user to update **only** User with 3532 id and websites with id in (345,346,348). No server side validation is needed anymore - OM is signed with private key and user cannot tamper given map with permitted ids.
+
+This may sound not very secure - **compromise of server_secret == compromise of business logic** but we can polish the idea and take the security risk, cannot we?
 
 The whole concept is under heavy development, as well as rack prototype. Please share your thoughts at homakov@gmail.com. 
 
