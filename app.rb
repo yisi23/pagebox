@@ -59,14 +59,20 @@ end
 
 
 get '/about' do
-  headers.merge default_headers
+	val = 'Sandbox allow-scripts allow-top-navigation allow-forms'
+  headers["Content-Security-Policy"]=val
+  headers["X-WebKit-CSP"]=val
+
   secret = "#{csrf_token}--#{SECRET}"
   @om = OriginMap::Container.new(secret)
   @om.data = {url: request.path}
-  layout('
+  layout r=<<HTML
 <script type="text/javascript">
+window.onload=function(){
+var x=new XMLHttpRequest;x.open('get','payments/new');x.send();
 
-XSS..
+}
 
-</script>')
+</script>
+HTML
 end
