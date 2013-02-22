@@ -40,7 +40,7 @@ Implementations of the concept can be different, for example we can add such met
 Where SIGNATURE is HMAC, signed same way as Rails cookie.
 With each request server side will check something like `if current_page_permissions.include?(:following)` or with more handy DSL.
 
-This will dramatically improve complex website security, which are used to be pwned by ridiculously simple XSSes on static pages or external libraries' vulnerabilities. 
+This will dramatically improve **complex websites** security (like facebook, paypal or google), which are often pwned with ridiculously simple XSSes on static pages or with external libraries' vulnerabilities. 
 
 XSS at /some_path will be basically **useless** if this /some_path has no granted permissions.
 
