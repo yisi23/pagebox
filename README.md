@@ -1,14 +1,21 @@
 # OriginMap: Tool & Guard
 ## What is OriginMap?
 
-XHR demo
+XHR demo - on the left Red arrows are arbitary requests attacker can do. on the right we map origins and restrict access
+
 ![XHR](http://f.cl.ly/items/0y3n0a3C261X2Y3X1V2q/demo%20\(1\).png)
 
-Frames and windows same-origin demo:
+Frames and windows same-origin demo - Sandbox CSP header denies all same-domain interaction, use postMessage instead:
+
 ![frames](http://f.cl.ly/items/3i152w2l243d2W1r0K3P/sameorig.png)
 
-Permitted origins demo:
+Permitted origins demo - how meta tag has information on what was permitted to this URL.
+
 ![permitted URLs](http://f.cl.ly/items/2s2B060O1d0N1D3b0U1B/somthn%20\(1\).png)
+
+## Attack Surface for certain functionality
+Before = 1 page surface * amount of all pages
+Now = 1 page surface * amount of pages that serve given functionality
 
 This is a concept of **bulletproof web applications**. Web is not perfect. Web is far from perfect. Web is broken: Cookies, Clickjacking, Frame navigation, CSRF,  links..
 
@@ -65,6 +72,12 @@ form_for(current_user)
     edit website..
     -om_perms[:websites] << website.id
 ```
+
+OR 
+```
+form_for(current_user, signed_data: {id: current_user.id})
+```
+
 This will generate such origin map:
 ```
 {
