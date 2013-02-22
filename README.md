@@ -17,7 +17,7 @@ XSS on `/about`, which is just a static page not using server side at all **lead
 ## Next level of XSS protection
 The idea I'm implementing is to make every page **independent and secure** from others, potentionally vulnerable pages located on the same domain. To make website work developer creates an origin map - he connects **page origins** with **what they are allowed to do**. 
 
-OriginMap **splits** the entire website into many pages with unique origins. Every page is not accessible from other pages unless you allowed it explicitly - you simply **cannot** `window.open/<iframe>` other pages on the same domain to extract `document.body.innerHTML` because of header CSP: Sandbox.
+OriginMap **splits** the entire website into many pages with unique origins. Every page is not accessible from other pages unless developer allowed it explicitly - you simply **cannot** `window.open/<iframe>` other pages on the same domain to extract `document.body.innerHTML` because of header CSP: Sandbox.
 
 Also every page contains additional origin map container in `<meta>` tag (Implementations of the concept can vary, this is how Rails adds csrf tokens), and sends it along with every `XMLHttpRequest` and `<form>` submission. It is **signed serialized object** (e.g. JSON)  containing `url` property - original page URL (not `location.href` which can be compromised with history.pushState), `perms` - permissions granted for this page and `params` - restricting specific params values to simplify server-side business logic. 
 
@@ -52,20 +52,29 @@ With each request server side will check something like `if current_page_permiss
 
 ## FAQ
 * Content Security Policy
+
 OriginMap takes adventadge of it. But CSP on itself is not panacea from XSS: DOM XSS (there are always a lot of ways to insert HTML leading to execution), [JSONP bypasses](http://homakov.blogspot.com/2013/02/are-you-sure-you-use-jsonp-properly.html)
 
 * Rely on Referrer as OriginPage header
-when I see someone using [referrer as a security measurement I cry](http://homakov.blogspot.com/2012/04/playing-with-referer-origin-disquscom.html). Seriously.
+
+When I see someone using [referrer as a security measurement I want to cry](http://homakov.blogspot.com/2012/04/playing-with-referer-origin-disquscom.html).
 
 * Subdomains
+
 Yes you can use subdomains to extract functionality. You can end up.
+
 1) follow.site.com
+
 2) transfermoney.site.com
+
 3) readmessages.site.com
+
 4) createapost.site.com
+
 ... Also at the end of the day I will hack your Single Sign On. :P
 
 * Rich Internet Applications
+
 If your app consists of one or two pages this feature will not decrease attack surface a lot. But it still can be useful.
 
 * What apps need it the most?
