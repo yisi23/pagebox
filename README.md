@@ -12,7 +12,7 @@ Permitted origins demo:
 
 This is a concept of **bulletproof web applications**. Web is not perfect. Web is far from perfect. Web is broken: Cookies, Clickjacking, Frame navigation, CSRF,  links..
 
-OriginMap splits the entire website into many pages with unique origins. Every page has its own Origin in terms of frame navigation - you simply cannot `window.open/<iframe>` to extract `document.body.innerHTML` because of CSP: Sandbox. 
+OriginMap **splits** the entire website into many pages with unique origins. Every page has its own Origin in terms of frame navigation - you simply cannot `window.open/<iframe>` to extract `document.body.innerHTML` because of CSP: Sandbox. 
 
 Also every page contains additional `OriginMapObject` in `<meta>` tag, and sends it along with every `XMLHttpRequest` and `<form>` submission. 
 
