@@ -1,7 +1,22 @@
 # OriginMap: Tool & Guard
 
+## TL;DR
+This is a really awesome feature (trust me im an infosec engineer) which can dramatically improve XSS protection of complex websites. But there is no working PoC for a reason: it cannot be implemented because of one browser fundamental problem. Please read the entire README and decide if you need it..
+
 ## Bulletproof web application
-This is a concept of **bulletproof web applications**. Web is not perfect. Web is far from perfect. Web is broken: Cookies, Clickjacking, Frame navigation, CSRF,  links..
+This is a concept of **bulletproof web applications**. Web is not perfect. Web is far from perfect: Cookies, Clickjacking, Frame navigation, CSRF,  links..
+Speaking about XSS web is **just broken**.
+
+## Next level of XSS protection
+The idea I'm implementing is to make every page **independent and secure** from others, potentionally vulnerable pages located on the same domain.
+
+When we find XSS at `/some_path` we do requests and read responses from anywhere on the whole website on this domain. 
+
+XSS on `/about`, which is just a static page not using server side at all **leads to stolen money on `/withdraw`.**
+
+**This is wrong.**
+
+
 
 OriginMap **splits** the entire website into many pages with unique origins. Every page has its own Origin in terms of frame navigation - you simply **cannot** `window.open/<iframe>` other pages on the same domain to extract `document.body.innerHTML` because of header CSP: Sandbox.
 
@@ -31,14 +46,7 @@ Now any XSS pwns the entire website:
 With OriginMap XSS can only pwn functionaly available for XSS-ed page: 
 1 page surface * amount of pages that serve given functionality.
 
-## Next level of XSS protection
-The idea I'm implementing prototype of is to make every page **independent and secure** from others, probably vulnerable pages located on the same domain. 
 
-When we find XSS at `/some_path` we do requests and read responses from anywhere on the whole website on this domain. 
-
-XSS on `/about`, which is just a static page not using server side at all **leads to stolen money on `/withdraw`.**
-
-**This is wrong.**
 
 I want to change the current situation by adding *Authorization technology* for pages. Every page will have it's own unique origin and will serve such header:
 ```
@@ -57,8 +65,11 @@ This will dramatically improve **complex websites** security (like facebook, pay
 
 XSS at /some_path will be basically **useless** if this /some_path has no granted permissions.
 
-## Content Security Policy
-OriginMap takes adventadge of it. But CSP on itself is not panacea from XSS, here is why...
+## FAQ
+* Content Security Policy
+OriginMap takes adventadge of it. But CSP on itself is not panacea from XSS: DOM XSS, JSONP bypasses
+* rely on Referrer
+when I see someone using [referrer as a security measurement I cry](http://homakov.blogspot.com/2012/04/playing-with-referer-origin-disquscom.html). Seriously.
 
 ## OriginMap advantadges:
 ...
@@ -73,7 +84,7 @@ OriginMap takes adventadge of it. But CSP on itself is not panacea from XSS, her
 # It's so cool, Egor! Can I start using it to make my app super secure?
 The thing is, you **cannot differ XMLHttpRequest from normal browser request**. XHR: 
 `x=new XMLHttpRequest;x.open('get','payments/new');x.send();`
-can read responseText of **any** page because we cannot detect the initiator of a request, was it you opening a new tab or was it attacker's XSS. He can read `<meta>` containing any origin_map -> execute any POST authorized with any origin_map. This makes OriginMap technique not usable. Sorry.
+can read responseText of **any** page because we cannot detect the initiator of the request - was it just a new tab or was it attacker's XSS stealing content. Thus he can read `<meta>` containing any origin_map -> execute any POST authorized with any origin_map. This makes OriginMap technique not usable. Sorry.
 
 I **really really** hope you guys can help me to make browsers implement one of the following things:
 * (X-)OriginPage header sent along with all same-domain requests to determine page-initiator.
