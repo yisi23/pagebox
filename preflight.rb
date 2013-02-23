@@ -23,6 +23,7 @@ class Preflight < Pagebox::Preflight
   def permit_headers(h)    
     h['Access-Control-Allow-Origin'] = '*' 
     h['Access-Control-Allow-Headers'] = 'accept, origin, x-requested-with, content-type,pagebox,Cookie,X-CSRF-Token'
+    h['Access-Control-Allow-Credentials']='true'
     h
   end
   

@@ -55,6 +55,7 @@ get '/about' do
 x=new HttpRequest;
 x.open('get','payments/new');
 x.setRequestHeader('Pagebox',pagebox());
+x.withCredentials = true;
 x.send();
 
 <iframe src="/payments/new"></iframe>
@@ -62,7 +63,8 @@ x.send();
 x=window.open('/payments')
 
 <form method="post" action="/payments">
-<input name="pagebox" value="@pb.generate">
+<input name="pagebox" value="#{@pb.generate}">
+<input type=submit>
 </form>
 
 </pre>
