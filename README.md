@@ -1,48 +1,4 @@
-# Pagebox — website gatekeeper.
-
-![XHR](http://f.cl.ly/items/0y3n0a3C261X2Y3X1V2q/demo%20\(1\).png)
-
-**Pagebox** is a technique for bulletproof web applications, which can dramatically improve XSS protection for complex and multi-layer websites with huge attack surface.
-
-Web is not super robust ([Cookies](http://homakov.blogspot.com/2013/02/rethinking-cookies-originonly.html), [Clickjacking](http://homakov.blogspot.com/2012/06/saferweb-with-new-features-come-new.html), [Frame navigation](http://homakov.blogspot.com/2013/02/cross-origin-madness-or-your-frames-are.html), [CSRF](http://homakov.blogspot.com/2012/03/hacking-skrillformer-moneybookers.html) etc) but **XSS is an Achilles' heel**, it is a shellcode for the entire domain.
-
-When we find XSS at `/some_path` we can make authorized requests and read responses from **anywhere on the whole website** on this domain. XSS on `/about`, which is just a static page not using server side at all **leads to stolen money on `/withdraw`.** This is not cool.
-
-## Sandboxed pages
-The idea I want to implement is to make every page **independent and secure** from others, potentionally vulnerable pages located on the same domain. To make website work developer creates a pagebox - he connects **page origins** with **what they are allowed / supposed to do**. 
-
-![frames](http://f.cl.ly/items/1l2I1s1o2U3t2y39050p/Screen%20Shot%202013-02-24%20at%203.51.27%20AM.png)
-
-Pagebox **splits** the entire website into many sandboxed pages with unique origins. Every page is not accessible from other pages unless developer allowed it explicitly - you simply **cannot** `window.open/<iframe>` other pages on the same domain and extract `document.body.innerHTML` because of the CSP header: `Sandbox`. It disallows all DOM interactions - use `postMessage` instead.
-
-![frames](http://f.cl.ly/items/3i152w2l243d2W1r0K3P/sameorig.png)
-
-Every page contains **a signed serialized object** (e.g. with JSON) in `<meta>` tag (implementations of the concept can vary, this is how Rails adds csrf tokens), and sends it along with every `XMLHttpRequest` and `<form>` submission. **Meta tag contains signed information about what was permitted for this URL.**
-
-Boxed page has assigned 'pagebox scope' and can do only allowed actions — e.g. if you have :messages scope you can read `messages.json` and POST to `/new_message`. Server side checks container integrity and executes request if permission was granted. At some extent it's more strict CSRF protection - it's Cross Page Request Forgery protection.
-
-It can be: `url` property - original page URL (not `location.href` which can be compromised with history.pushState), `perms` - permissions granted for this page and `params` - restricting specific params values to simplify server-side business logic. 
-
-Pagebox can look like: `["follow", "write_message", "read_messages", "edit_account", "delete_account"]`. Or it can be more high-level:
-`["default", "basic", "edit", "show_secret"]`
-
-![permitted URLs](http://f.cl.ly/items/2s2B060O1d0N1D3b0U1B/somthn%20\(1\).png)
-
-# Problems
-Now page can only submit forms, but XHR CORS doesn't work properly - nobody knew we will try it in such way. I'm stuck with XHR-with-credentials and I need your help and ideas. 
-
-1) Every page is sandboxed and we cannot put 'allow-same-origin' to avoid DOM interactions
-
-2) When we sandbox a page it gets a unique origin 'null', when we make requests from 'null' we cannot attach credentials (Cookies), because wildcard ('*') [is not allowed](https://developer.mozilla.org/en-US/docs/HTTP/Access_control_CORS#Requests_with_credentials) in `Access-Control-Allow-Origin: *` for with-credentials requests.
-```
-when responding to a credentialed request,  server must specify a domain, and cannot use wild carding.
-```
-
-3) Neither `*` nor `null` are allowed for `Access-Control-Allow-Origin`. So XHR is not possible with Cookies from sandboxed pages.
-
-4) I was trying to use not sandboxed /pageboxproxy iframe, which would do the trick from not sandboxed page and return result back with postMessage, but when we frame not sandboxed page under sandboxed it doesn't work either.
-
-I don't know how to fix it but I really want to make pagebox technique work. **It fixes the Internet.**
+[# Pagebox — website gatekeeper, description](http://homakov.blogspot.com/2013/02/pagebox-website-gatekeeper.html)
 
 # FAQ
 
