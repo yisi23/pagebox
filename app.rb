@@ -25,7 +25,11 @@ def layout(body)
   </head>
   <body>
 
-Try POST to payments <form method="post" action="/payments">
+Try POST to /payments <form method="post" action="/payments">
+<input name="pagebox" type="hidden" value="@pb.generate">
+<input type=submit>
+</form>
+Try POST to /payments/finish <form method="post" action="/payments/finish">
 <input name="pagebox" type="hidden" value="@pb.generate">
 <input type=submit>
 </form>
@@ -57,11 +61,16 @@ get '/payments/new' do
 end
 
 post '/payments' do
-  "PAID"
+  @pb << :finish
+  layout "PAID"
+end
+
+post '/payments/finish' do
+  layout "FINISHED"
 end
 
 post '/order_pizza' do
-  "PERFEKTO!"
+  layout "PERFEKTO!"
 end
 
 

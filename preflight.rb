@@ -2,6 +2,8 @@ class Preflight < Pagebox::Preflight
 
   def permit?(req, pagebox)
     case req.path
+    when '/payments/finish'
+      pagebox.permit? :finish
     when /\A\/payments/
       # serious business.
       pagebox.permit? :payments
