@@ -31,7 +31,7 @@ Server side checks container integrity and authorizes request if permission was 
 
 ## Signature
 ```
-<meta name="permissions" content="following,edit_account,new_status--SIGNATURE">
+<meta name="omap" content="following,edit_account,new_status--SIGNATURE">
 ```
 Where SIGNATURE is HMAC, signed same way as Rails cookie.
 With each request server side will check something like `if current_page_permissions.include?(:following)` or with more handy DSL.

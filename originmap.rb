@@ -25,15 +25,15 @@ module OriginMap
     end
 
     def meta_tag
-      v = '<meta name="origin_map" content="'+generate+'" />'
+      v = '<meta name="omap" content="'+generate+'" />'
       #v.respond_to? :html_safe ? v.html_safe : v 
     end
 
     def permit?(scope)
       @data["scope"].include? scope.to_s
     end
-    
-    def add!(*vals)
+  
+    def permit!(*vals)
       @data["scope"].push *vals
     end
 
