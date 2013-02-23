@@ -3,90 +3,61 @@ require './pagebox'
 require './preflight'
 require 'securerandom'
 
-SECRET = 'abcd'
+#pagebox secret
+PAGEBOX_SECRET = 'abcdabcdabcdabcdabcdabcdabcdabcdabcd'
 
-
-
-=begin
-
-if env['QUERY_STRING'].include?('origin_map=')
-        # must be last param, for now
-        origin_map = env['QUERY_STRING'].split('origin_map=').last
-        # check integrity and access ..
-        puts 'Checking integrity of', origin_map
-
-        if true
-
-          [200, heads, ['Access granted!']]
-        end
-      end
-=end
-
-# URL -based
-def map_origin(path)
-  case path
-
-  when '/about'
-    :no
-  else
-    :default
-  end
+before do
+  @pb = request.env['pagebox']
 end
 
 
-#enable :sessions
-
-
-def secret 
-  #cookies[:_csrf_token] ||
-  csrf_token = SecureRandom.base64(30)
-  "#{csrf_token}--#{SECRET}"
-end
+enable :sessions
 
 def layout(body)
   return r=<<HTML
 <!doctype html>
 <html>
 <head>
-<script src="/origin_map.js"></script>
-<title>OriginMap demo</title>
-#{@omap.meta_tag}
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script src="/pagebox.js"></script>
+<title>Pagebox demo</title>
+#{@pb.meta_tag}
 </head>
 <body>
-<h1>OriginMap</h1>
+<h1> Pagebox </h1>
 #{body}
+<script>
+pb_log();
+</script>
 </body>
 </html>
 HTML
 end
 
-before do
-end
-
 get '/payments/new' do
-  layout("Your payments #{request.env}")
+  @pb << :payments
+
+  layout("This is payment page, feel free to pay from here - POST to /payments")
 end
 
 post '/payments' do
-  #PAYMENT!
-
-
-
-  #request.xhr?.to_s
-  
-
+  "PAID"
 end
 
 
 get '/about' do
-  @omap = request.env['omap']
+  @pb << :static
 
-  @omap.permit! :static
   layout r=<<HTML
+  This is about page, you cannot pay from here
 <script type="text/javascript">
 window.onload=function(){
-var x=new XMLHttpRequest;x.open('get','payments/new');x.send();
 
+/*
+x=new HttpRequest;
+x.open('get','payments/new?omap=adsf');
+x.send('ffffff');
+*/
 }
 
 </script>

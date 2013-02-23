@@ -18,10 +18,11 @@ window.pagebox = function(decode){
 }
 
 window.pb_log = function(){
-  console.log('Pagebox allows: ', pagebox(1).scopes)
+  console.log('Pagebox allows: ', pagebox(1))
 }
 
 
 window.onload = function(){
 
 }
+

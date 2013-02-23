@@ -8,7 +8,7 @@ module Pagebox
 
     def initialize(secret)
       @secret = secret
-      @verifier = MessageVerifier.new(secret)
+      @verifier = MessageVerifier.new(@secret)
       build!
     end
 
@@ -17,7 +17,10 @@ module Pagebox
     end
 
     def generate
+      
+      puts 'teeeest', verify(@verifier.generate(@data))
       @verifier.generate(@data)
+
     end
 
     def to_s
@@ -25,7 +28,7 @@ module Pagebox
     end
 
     def build!
-      @data = {"scope" => []}
+      @data = ["default"]
     end
 
     def meta_tag
@@ -33,11 +36,11 @@ module Pagebox
     end
 
     def permit?(scope)
-      @data["scope"].include? scope.to_s
+      @data.include? scope.to_s
     end
   
-    def permit!(*vals)
-      @data["scope"].push *vals
+    def <<(*vals)
+      @data.push *vals
     end
 
   end
@@ -53,52 +56,78 @@ module Pagebox
     def call(env)
       request = Rack::Request.new(env)
 
-      puts 'Received ENV', env
-      if env['HTTP_ORIGIN'] and env["REQUEST_METHOD"] == 'OPTIONS'
+      #puts 'Received ENV', env
+      if env["REQUEST_METHOD"] == 'OPTIONS'
         # XHR preflight - Allow anything
         puts 'Preflight XHR'
-        [200, DEFAULT_HEADERS, ['Access granted!']]
+        return [200, permit_headers, ['Access granted!']]
       else
         # actual request (GET/POST) can be XHR or normal browser navigation
 
-        env['pagebox'] = Pagebox::Box.new(secret)
+
+        pagebox_token = request.cookies["pagebox_token"] || begin
+          set_token = true
+          SecureRandom.base64(30)
+        end
+
+        pagebox_secret = "#{pagebox_token}--#{PAGEBOX_SECRET}"
+        puts "CURRENT SECRET IS #{pagebox_secret}"
+
+        env['pagebox'] = Box.new(pagebox_secret)
         signed_pagebox = env["HTTP_PAGEBOX"] || request.params['pagebox']
 
         permitted = if signed_pagebox
-          env['pagebox'].verify(pagebox_map)
-          puts 'loaded pagebox', env['pagebox'].data
-          allow?(request, env['pagebox'])
+          begin
+            env['pagebox'].verify(signed_pagebox.to_s)
+            puts 'loaded pagebox', env['pagebox'].data
+            permitted_list = env['pagebox'].data
+            permit?(request, env['pagebox'])
+          rescue MessageVerifier::InvalidSignature
+            return error 'Malformed pagebox'
+          end 
         else
           false
         end
 
+        # now we clean and build new pagebox
+        env['pagebox'].build!
+
         if env['REQUEST_METHOD'] == 'GET'
           # READ
-
           response = @app.call(env)
         else
           # WRITE
           if permitted
-
+            response = @app.call(env)
+          else
+            return error(signed_pagebox ? 
+              "Pagebox provided but doesn't permit this action. Allowed: #{permitted_list}" : 
+              "Pagebox not found")
           end
-
         end
-                
-        response[1].merge!(DEFAULT_HEADERS) if permitted
-        puts 'response headers', resp[1]
-        response
+        rr = Rack::Response.new(response[2],response[0],response[1])
+        
+        # allow XHR to read response if permitted
+        rr.headers.merge!(permit_headers) if permitted
+        
 
+        rr.set_cookie("pagebox_token",
+                          value: pagebox_token,
+                          path: "/",
+                          httponly: true) if set_token
+
+        return rr
       end
     end
 
     def error(text)
-      [500, {}, [text]]
+      [500, default_headers.merge('Content-Type'=>'application/json'), [JSON.dump({error: text})]]
     end
   end
 
 
 
-  # stolen from rails
+  # rails - like
   class MessageVerifier
     class InvalidSignature < StandardError; end
 
@@ -109,14 +138,18 @@ module Pagebox
     end
 
     def verify(signed_message)
-      raise InvalidSignature if signed_message.blank?
+      raise InvalidSignature if signed_message.empty?
 
       data, digest = signed_message.split("--")
-      if data.present? && digest.present? && a.hash == b.hash && a == b
+      if data && digest && compare(digest, generate_digest(data))
         @serializer.load(::Base64.decode64(data))
       else
         raise InvalidSignature
       end
+    end
+
+    def compare(a,b)
+      a.hash == b.hash && a == b
     end
 
     def generate(value)
