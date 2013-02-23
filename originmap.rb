@@ -4,26 +4,39 @@ require 'base64'
 module OriginMap
 
   class Container
-  	attr_accessor :data
+    attr_accessor :data
 
-  	def initialize(secret, data={})
-  		@secret = secret
-  		@data = data
-  		@verifier = MessageVerifier.new(secret)
-  	end
+    def initialize(secret)
+      @secret = secret
+      @data = {"scope" => []}
+      @verifier = MessageVerifier.new(secret)
+    end
 
-  	def load(signed_message)
-  		@data = @verifier.verify(signed_message)
-  	end
+    def verify(signed_message)
+      @data = @verifier.verify(signed_message)
+    end
 
-  	def generate
-  		@verifier.generate(@data)
-  	end
+    def generate
+      @verifier.generate(@data)
+    end
 
-  	def to_s
-  	  v = '<meta name="origin_map" content="'+generate+'" />'
-	  	#v.respond_to? :html_safe ? v.html_safe : v 
-  	end
+    def to_s
+      @data.inspect
+    end
+
+    def meta_tag
+      v = '<meta name="origin_map" content="'+generate+'" />'
+      #v.respond_to? :html_safe ? v.html_safe : v 
+    end
+
+    def permit?(scope)
+      @data["scope"].include? scope.to_s
+    end
+    
+    def add!(*vals)
+      @data["scope"].push *vals
+    end
+
   end
 
 

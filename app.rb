@@ -10,13 +10,25 @@ class Preflight
 
   def call(env)
     heads = {'Access-Control-Allow-Origin' => '*', 
-            'Access-Control-Allow-Headers' => 'Origin-Map,X-CSRF-Token,Content-Type'}
+            'Access-Control-Allow-Headers' => 'Origin-Map,X-CSRF-Token,Content-Type',
+            "X-XSS-Protection" => '0;'}
    
     puts 'Received ENV', env
     # request from sandbox and XHR
-    if env['HTTP_ORIGIN'] == 'null' and !env['HTTP_ORIGIN_MAP']
-      #env["REQUEST_METHOD"] == 'OPTIONS'
-      if env['QUERY_STRING'].include?('origin_map=')
+    if env['HTTP_ORIGIN'] == 'null' and env["REQUEST_METHOD"] == 'OPTIONS'
+      [200, heads, ['Access granted!']]
+    else
+      resp = @app.call(env)
+      resp[1].merge!(heads)
+      puts 'response', resp[1]
+      resp
+    end
+  end
+end
+
+=begin
+
+if env['QUERY_STRING'].include?('origin_map=')
         # must be last param, for now
         origin_map = env['QUERY_STRING'].split('origin_map=').last
         # check integrity and access ..
@@ -27,20 +39,11 @@ class Preflight
           [200, heads, ['Access granted!']]
         end
       end
-    else
-      resp = @app.call(env)
-      resp[1].merge!(heads)
-      puts 'response', resp[1]
-      resp
-    end
-  end
-end
-
+=end
 
 SECRET = 'abcd'
 default_headers = {
   "Content-Security-Policy" => 'sandbox;',
-  "X-XSS-Protection" => '0;'
 }
 
 
@@ -66,7 +69,7 @@ def layout(body)
 <html>
 <head>
 <title>OriginMap demo</title>
-#{@om}
+#{@OMap.meta_tag}
 </head>
 <body>
 <h1>OriginMap</h1>
@@ -77,9 +80,7 @@ HTML
 end
 
 get '/payments/new' do
-
-
-  layout("Your payments#{request.env}")
+  layout("Your payments #{request.env}")
 end
 
 post '/payments' do
@@ -99,8 +100,8 @@ get '/about' do
   headers["X-WebKit-CSP"]=val
 
   secret = "#{csrf_token}--#{SECRET}"
-  @om = OriginMap::Container.new(secret)
-  @om.data = {url: request.path}
+  @OMap = OriginMap::Container.new(secret)
+  @OMap.data = {url: request.path}
   layout r=<<HTML
 <script type="text/javascript">
 window.onload=function(){
