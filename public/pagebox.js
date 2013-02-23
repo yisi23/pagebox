@@ -22,7 +22,13 @@ window.pb_log = function(){
 }
 
 
-window.onload = function(){
-
+window.pageboxForms = function(){
+  var nodes = document.getElementsByName('pagebox');
+  var pb = pagebox();
+  for(var i in nodes){
+    nodes[i].value = pb;
+  }
 }
+
+window.onload = pageboxForms
 

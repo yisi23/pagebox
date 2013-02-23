@@ -17,21 +17,37 @@ def layout(body)
   return r=<<HTML
 <!doctype html>
 <html>
-<head>
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-<script src="/pagebox.js"></script>
-<title>Pagebox demo</title>
-#{@pb.meta_tag}
-</head>
-<body>
-<h1> Pagebox </h1>
-#{body}
-<script>
-pb_log();
-</script>
+  <head>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="/pagebox.js"></script>
+    <title>Pagebox demo</title>
+    #{@pb.meta_tag}
+  </head>
+  <body>
 
-<iframe sandbox="allow-scripts  allow-top-navigation allow-forms allow-popups allow-same-origin" src="/pageboxproxy"></iframe>
-</body>
+Try POST to payments <form method="post" action="/payments">
+<input name="pagebox" type="hidden" value="@pb.generate">
+<input type=submit>
+</form>
+Try POST to /order_pizza <form method="post" action="/order_pizza">
+<input name="pagebox" type="hidden" value="@pb.generate">
+<input type=submit>
+</form>
+Try GET (navigate) to /payments/new <form method="get" action="/payments/new">
+<input type=submit>
+</form>
+Try GET (navigate) to /about <form method="get" action="/about">
+<input type=submit>
+</form>
+
+    #{body}
+    <script>
+    pb_log();
+    </script>
+
+
+
+  </body>
 </html>
 HTML
 end
@@ -39,43 +55,39 @@ end
 get '/payments/new' do
   @pb << :payments
 
-  layout("This is payment page, feel free to pay from here - POST to /payments")
+  layout("This is payment page, feel free to pay from here - POST to /payments. You cannot order pizza from here, no way!!!")
 end
 
 post '/payments' do
   "PAID"
 end
 
+post '/order_pizza' do
+  "PERFEKTO!"
+end
+
 
 get '/about' do
-  @pb << :static
+  @pb << :order_pizza
 
   layout r=<<HTML
-  This is /about page, you are not supposed to pay from here. This page is XSS vulnerable. Try to pay from here using js console
-
+  This is /about page, you are not supposed to pay from here, you can only order pizza.
 <pre>
+This XHR doesnt send cookies :(
 x=new HttpRequest;
-x.open('get','payments/new');
+x.open('get','/payments/new');
 x.setRequestHeader('Pagebox',pagebox());
 x.withCredentials = true;
 x.send();
-
+You cannot read data from frame:<br> 
 <iframe src="/payments/new"></iframe>
-
-x=window.open('/payments')
-
-<form method="post" action="/payments">
-<input name="pagebox" value="#{@pb.generate}">
-<input type=submit>
-</form>
-
 </pre>
 HTML
 end
 
 
 get '/pageboxproxy' do
-  # do all given in postMessage
+  # XHR received from postMessage
   return r=<<HTML
 <!doctype html>
 <html>
@@ -91,7 +103,7 @@ window.onmessage = function(e){
   window.e = e;
   document.write(e.data)
   var x=new XMLHttpRequest;
-  x.open('get','payments/new');
+  x.open('get','/payments/new');
   x.withCredentials = true;
   x.send();
 }

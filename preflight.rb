@@ -5,16 +5,17 @@ class Preflight < Pagebox::Preflight
     when /\A\/payments/
       # serious business.
       pagebox.permit? :payments
+    when '/order_pizza'
+      pagebox.permit? :order_pizza
     else
       true # pagebox.permit? :basic
     end
   end
 
   def default_headers(h, sameorigin = false)
-    #allow-same-origin
     val = 'Sandbox allow-scripts  allow-top-navigation allow-forms allow-popups'
     val << ' allow-same-origin' if sameorigin
-    val = '' if sameorigin
+    #val = '' if sameorigin
 
     h["Content-Security-Policy"] = val
     h["X-WebKit-CSP"] = val

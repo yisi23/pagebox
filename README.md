@@ -1,40 +1,55 @@
-# Pagebox: Tool & Guard
+# Pagebox — website gatekeeper.
 
 ![XHR](http://f.cl.ly/items/0y3n0a3C261X2Y3X1V2q/demo%20\(1\).png)
 
-**Pagebox** is a revolutionary technique for **bulletproof web applications** (trust me im [an infosec engineer](http://homakov.blogspot.com)) which can dramatically improve XSS protection and overall access restrictions for huge, complex and multi-layer websites.
+**Pagebox** is a technique for bulletproof web applications, which can dramatically improve XSS protection for complex and multi-layer websites with huge attack surface.
 
-Web is not perfect, far from perfect: [Cookies](http://homakov.blogspot.com/2013/02/rethinking-cookies-originonly.html), [Clickjacking](http://homakov.blogspot.com/2012/06/saferweb-with-new-features-come-new.html), [Frame navigation](http://homakov.blogspot.com/2013/02/cross-origin-madness-or-your-frames-are.html), [CSRF](http://homakov.blogspot.com/2012/03/hacking-skrillformer-moneybookers.html) etc
+Web is not super robust ([Cookies](http://homakov.blogspot.com/2013/02/rethinking-cookies-originonly.html), [Clickjacking](http://homakov.blogspot.com/2012/06/saferweb-with-new-features-come-new.html), [Frame navigation](http://homakov.blogspot.com/2013/02/cross-origin-madness-or-your-frames-are.html), [CSRF](http://homakov.blogspot.com/2012/03/hacking-skrillformer-moneybookers.html) etc) but **XSS is an Achilles' heel**, it is a shellcode for the entire domain.
 
-When we find XSS at `/some_path` we can make authorized requests and read responses from **anywhere on the whole website** on this domain. XSS on `/about`, which is just a static page not using server side at all **leads to stolen money on `/withdraw`.**
+When we find XSS at `/some_path` we can make authorized requests and read responses from **anywhere on the whole website** on this domain. XSS on `/about`, which is just a static page not using server side at all **leads to stolen money on `/withdraw`.** This is not cool.
 
-**This is not cool. We can fix it.**
-## Next level of XSS protection: Page Scope
-The idea I'm implementing is to make every page **independent and secure** from others, potentionally vulnerable pages located on the same domain. To make website work developer creates a pagebox - he connects **page origins** with **what they are allowed to do**. 
+## Sandboxed pages
+The idea I want to implement is to make every page **independent and secure** from others, potentionally vulnerable pages located on the same domain. To make website work developer creates a pagebox - he connects **page origins** with **what they are allowed / supposed to do**. 
 
-Pagebox **splits** the entire website into many pages with unique origins. Every page is not accessible from other pages unless developer allowed it explicitly - you simply **cannot** `window.open/<iframe>` other pages on the same domain and extract `document.body.innerHTML` because of the header CSP: `Sandbox`. It disallows all "samedomain" interactions - use a secure technique `postMessage` instead.
+Pagebox **splits** the entire website into many sandboxed pages with unique origins. Every page is not accessible from other pages unless developer allowed it explicitly - you simply **cannot** `window.open/<iframe>` other pages on the same domain and extract `document.body.innerHTML` because of the CSP header: `Sandbox`. It disallows all DOM interactions - use `postMessage` instead.
 
 ![frames](http://f.cl.ly/items/3i152w2l243d2W1r0K3P/sameorig.png)
 
-Also every page contains additional pagebox Container in `<meta>` tag (Implementations of the concept can vary, this is how Rails adds csrf tokens), and sends it along with every `XMLHttpRequest` and `<form>` submission. It is **a signed serialized object** (e.g. with JSON)  containing various values. **Meta tag contains signed information about what was permitted for this URL.**
+Every page contains **a signed serialized object** (e.g. with JSON) in `<meta>` tag (implementations of the concept can vary, this is how Rails adds csrf tokens), and sends it along with every `XMLHttpRequest` and `<form>` submission. **Meta tag contains signed information about what was permitted for this URL.**
+
+Boxed page has assigned 'pagebox scope' and can do only allowed actions — e.g. if you have :messages scope you can read `messages.json` and POST to `/new_message`. Server side checks container integrity and executes request if permission was granted. At some extent it's more strict CSRF protection - it's Cross Page Request Forgery protection.
 
 It can be: `url` property - original page URL (not `location.href` which can be compromised with history.pushState), `perms` - permissions granted for this page and `params` - restricting specific params values to simplify server-side business logic. 
 
-**PageScope** is a ruby implementation or permission-based Pagebox conception. Every page has 'scope' dedicated for this origin. Page can only execute request authorized for scope this page has. Scope can look like: `["follow", "write_message", "read_messages", "edit_account", "delete_account"]`. Or it can be more high-level:
-`["default", "basic", "edit_resource", "show_secret"]`
-
-Server side checks container integrity and authorizes request if permission was granted.
+Pagebox can look like: `["follow", "write_message", "read_messages", "edit_account", "delete_account"]`. Or it can be more high-level:
+`["default", "basic", "edit", "show_secret"]`
 
 ![permitted URLs](http://f.cl.ly/items/2s2B060O1d0N1D3b0U1B/somthn%20\(1\).png)
+
+# Problems
+Now page can only submit forms, but XHR CORS doesn't work properly, perhaps because nobody knew we will try it to use in a way to sandbox website pages. I'm stuck with XHR-with-credentials and I need your help and ideas. 
+
+1) Every page is sandboxed and we cannot put 'allow-same-origin' to avoid DOM interactions
+
+2) When we sandbox a page it gets a unique origin 'null', when we make requests from 'null' we cannot attach credentials (Cookies), because wildcard ('*') [is not allowed](https://developer.mozilla.org/en-US/docs/HTTP/Access_control_CORS#Requests_with_credentials) in `Access-Control-Allow-Origin: *` for with-credentials requests.
+```
+when responding to a credentialed request,  server must specify a domain, and cannot use wild carding.
+```
+
+3) Neither `*` nor `null` are allowed for `Access-Control-Allow-Origin`. So XHR is not possible with Cookies from sandboxed pages.
+
+4) I was trying to use not sandboxed /pageboxproxy iframe, which would do the trick from not sandboxed page and return result back with postMessage, but when we frame not sandboxed page under sandboxed it doesn't work either.
+
+I don't know how to fix it but I really want to make pagebox technique work. **It fixes the Internet.**
 
 # FAQ
 
 ## Signature
 ```
-<meta name="pagebox" content="following,edit_account,new_status--SIGNATURE">
+<meta name="pagebox" content="WyJkZWZhdWx0Iiwic3RhdGljIl0=--c8303f09f8a5e2ac9b70d5b4dbdc44ca25c97c8a">
 ```
-Where SIGNATURE is HMAC, signed same way as Rails cookie.
-With each request server side will check something like `if current_page_permissions.include?(:following)` or with more handy DSL.
+HMAC, signed same way as Rails cookie.
+With each request server side checks something like `if current_page_permissions.include?(:following)` or with more handy DSL.
 
 ## Attack Surface.
 Before any XSS could pwn the entire website:
@@ -68,11 +83,13 @@ Yes you can use subdomains to extract functionality. You can end up with:
 
 4) createapost.site.com
 
-... Also at the end of the day I will hack your Single Sign On. :trollface:
+5) transactionhistory.site.com
+
+... at the end of the day I will hack your Single Sign On. :trollface:
 
 ## Rich Internet Applications
 
-If your app consists of one or two pages this feature **will not** decrease attack surface a lot because what **all possible functionality** was granted to this single page.
+If your app consists of one or two pages this feature **will not** decrease attack surface because **all possible functionality** was granted to this single page.
 
 ## So which apps need it the most?
 
@@ -82,7 +99,7 @@ XSS at /some_path will be basically **useless** if this /some_path has no grante
 
 If you don't permit anything for /static/page you can leave an XSS reflector and make fun of script kiddies trying to exploit other pages with it.
 
-## Types of Pagebox
+## Types
 
 ### URL-based
 
@@ -108,13 +125,7 @@ Doesn't it sound funny to let your customers lose money/be spamed because of XSS
 
 Pagebox protection - is investment in your current and future website safety.
 
-
-# How it works.
-Goal to not let not scoped POST requests to modify anything and to not allow not scoped GET requests be read with XHR
-
-Current problem - when we do CORS request (request from unique null origin is equal CORS) AND we want to attach credentials (Cookies) we cannot specify Origin on server side as wild card '*', because of specification. Our origin is 'null' so we cannot make any requests with cookies. Thus I created a Pageboxproxy doing just same requests you asked it to do and returning the response in postMessage
-
-# Bonus: Pagebox 2.0 as view-based business logic. (a possible feature)
+# P.S. Pagebox 2.0 as view-based business logic. (a possible feature)
 Here is another sweet feature: it can change the way you write business logic. Template can look like this:
 ```
 form_for(current_user)
@@ -127,7 +138,6 @@ or even simpler DSL
 ```
 form_for(current_user, signed_data: {id: current_user.id})
 ```
-
 This will generate such pagebox:
 ```
 {
@@ -138,12 +148,6 @@ This will generate such pagebox:
   }
 }
 ```
-The pagebox allows user to update **only** User with 3532 id and websites with id in (345,346,348). No server side validation is needed anymore - OM is signed with private key and user cannot tamper given pagebox with permitted ids.
-
-This may sound not very secure - **compromise of server_secret == compromise of business logic** but we can polish the idea and take the security risk, cannot we?
-
+The pagebox allows user to update **only** User with 3532 id and websites with id in (345,346,348). No server side validation is needed anymore - OM is signed with private key and user cannot tamper given pagebox with permitted ids. This may sound not very secure - **compromise of server_secret == compromise of business logic** but we can polish the idea and take the security risk, don't we?
 
 The whole concept is under heavy development, as well as rack prototype. Please share your thoughts at homakov@gmail.com. 
-
-
-
