@@ -2,8 +2,7 @@
 
 ![XHR](http://f.cl.ly/items/0y3n0a3C261X2Y3X1V2q/demo%20\(1\).png)
 
-## Preface
-This is a really awesome idea (trust me im [an infosec engineer](http://homakov.blogspot.com)) which can dramatically improve XSS protection and overall access restrictions for huge, complex and multi-layer websites. 
+OriginMap is a revolutionary technique (trust me im [an infosec engineer](http://homakov.blogspot.com)) which can dramatically improve XSS protection and overall access restrictions for huge, complex and multi-layer websites.
 
 ## Summary
 **OriginMap** is a conception of a **bulletproof web application**. Web is not perfect. Our web is far from perfect: [Cookies](http://homakov.blogspot.com/2013/02/rethinking-cookies-originonly.html), [Clickjacking](http://homakov.blogspot.com/2012/06/saferweb-with-new-features-come-new.html), [Frame navigation](http://homakov.blogspot.com/2013/02/cross-origin-madness-or-your-frames-are.html), [CSRF](http://homakov.blogspot.com/2012/03/hacking-skrillformer-moneybookers.html) etc
@@ -32,6 +31,8 @@ Server side checks container integrity and authorizes request if permission was 
 
 ![permitted URLs](http://f.cl.ly/items/2s2B060O1d0N1D3b0U1B/somthn%20\(1\).png)
 
+# FAQ
+
 ## Signature
 ```
 <meta name="permissions" content="following,edit_account,new_status--SIGNATURE">
@@ -39,8 +40,7 @@ Server side checks container integrity and authorizes request if permission was 
 Where SIGNATURE is HMAC, signed same way as Rails cookie.
 With each request server side will check something like `if current_page_permissions.include?(:following)` or with more handy DSL.
 
-# FAQ
-### Attack Surface.
+## Attack Surface.
 Before any XSS could pwn the entire website:
 
 `1 page surface * amount of all pages.`
@@ -49,17 +49,17 @@ With OriginMap XSS can only pwn functionaly available for XSS-ed page:
 
 `1 page surface * amount of pages that serve given functionality.`
 
-### Content Security Policy
+## Content Security Policy
 
 OriginMap takes adventadge of it. But CSP on itself is not panacea from XSS: DOM XSS (there are always a lot of ways to insert HTML leading to execution), [JSONP bypasses](http://homakov.blogspot.com/2013/02/are-you-sure-you-use-jsonp-properly.html)
 
-### Rely on Referrer as OriginPage header
+## Rely on Referrer as OriginPage header
 
 When I see someone using [referrer as a security measurement I want to cry](http://homakov.blogspot.com/2012/04/playing-with-referer-origin-disquscom.html).
 
-### Subdomains
+## Subdomains
 
-Yes you can use subdomains to extract functionality. You can end up.
+Yes you can use subdomains to extract functionality. You can end up with:
 
 1) follow.site.com
 
@@ -69,26 +69,28 @@ Yes you can use subdomains to extract functionality. You can end up.
 
 4) createapost.site.com
 
-... Also at the end of the day I will hack your Single Sign On. :P
+... Also at the end of the day I will hack your Single Sign On. :trollface:
 
-### Rich Internet Applications
+## Rich Internet Applications
 
-If your app consists of one or two pages this feature will not decrease attack surface a lot. But it still can be useful.
+If your app consists of one or two pages this feature **will not** decrease attack surface a lot because what **all possible functionality** was granted to this single page.
 
-* What apps need it the most?
+## So which apps need it the most?
 
-This will dramatically improve **complex websites** security (like facebook, paypal or google), which are often pwned with ridiculously simple XSSes on static pages or with external libraries' vulnerabilities.
+This will dramatically improve **complex websites** security (like facebook, paypal or google), which are often pwned with ridiculously simple XSSes on static/legacy pages or with external libs vulnerabilities(for example copy-paste swf file).
 
-XSS at /some_path will be basically **useless** if this /some_path has no granted permissions. If you don't permit anything for /static/page you can leave an XSS reflector and make fun of script kiddies trying to exploit other pages with it.
+XSS at /some_path will be basically **useless** if this /some_path has no granted explicitely permissions. 
 
-### Types of OriginMap
+If you don't permit anything for /static/page you can leave an XSS reflector and make fun of script kiddies trying to exploit other pages with it.
 
-#### URL-based
+## Types of OriginMap
+
+### URL-based
 
 Detection of given permissions by checking origin page url. 
 `perms << :edit_account if origin_url == '/edit_account'`
 
-#### Permissions-based
+### Permissions-based
 
 When you create and sign permissions **in views**.
 ```
@@ -96,15 +98,15 @@ When you create and sign permissions **in views**.
 =form_for current_user
   ..here we edit current user
 ```
-#### Signed params-based
+### Signed params-based
 When you sign params and some of their constant values. Like strong_params but views-based. Feature for 2 version, maybe.
 
-### Can I start using it to make my app super secure NOW?
+## Can I start using it to make my app super secure NOW?
 The thing is, you **cannot differ XMLHttpRequest from normal browser request**. XHR: 
 `x=new XMLHttpRequest;x.open('get','payments/new');x.send();`
 can read responseText of **any** page because we cannot detect the initiator of the request - was it just a new tab or was it attacker's XSS stealing content. Thus he can read `<meta>` containing any origin_map -> execute any POST authorized with any origin_map. This makes OriginMap technique harder. 
 
-### XSS in real world? 
+## XSS in real world? 
 
 Open responsible disclosure page and see bugs disclosed by whitehats. Now double it and this is amount of bugs found by blackhats. They might not be using it right now, but if your app gets popular and it becomes profitable to exploit an XSS - it will punch you. 
 
@@ -112,7 +114,7 @@ Doesn't it sound funny to let your customers lose money/be spamed because of XSS
 
 You **need** OriginMap protection - this is investment for your continous website safety and structure.
 
-## Bonus: OriginMap 2.0 as view-based business logic. (a possible feature)
+# Bonus: OriginMap 2.0 as view-based business logic. (a possible feature)
 Here is another sweet feature: it can change the way you write business logic. Template can look like this:
 ```
 form_for(current_user)
