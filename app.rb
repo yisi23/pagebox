@@ -3,15 +3,15 @@ require './pagebox'
 require './preflight'
 require 'securerandom'
 
-#pagebox secret
+
+disable :protection
+enable :sessions
+
 PAGEBOX_SECRET = 'abcdabcdabcdabcdabcdabcdabcdabcdabcd'
 
 before do
   @pb = request.env['pagebox']
 end
-
-disable :protection
-enable :sessions
 
 def layout(body)
   return r=<<HTML
@@ -44,8 +44,6 @@ Try GET (navigate) to /about <form method="get" action="/about">
     <script>
     pb_log();
     </script>
-
-
 
   </body>
 </html>

@@ -49,7 +49,6 @@ module Pagebox
     def call(env)
       request = Rack::Request.new(env)
 
-      #puts 'Received ENV', env
       if env["REQUEST_METHOD"] == 'OPTIONS'
         # XHR preflight - Allow anything
         puts "Allow XHR"
@@ -82,8 +81,7 @@ module Pagebox
           false
         end
 
-        puts "#{permitted} #{request.path} for #{env['pagebox'].data}"
-
+        puts "Granted #{permitted} #{request.path} for #{env['pagebox'].data}"
 
         # now we clean and build new pagebox
         env['pagebox'].build!
@@ -115,14 +113,13 @@ module Pagebox
                           value: pagebox_token,
                           path: "/",
                           httponly: true) if set_token
-        puts "final headers #{rr.headers}"
 
-        return rr
+        rr
       end
     end
 
     def error(text)
-      puts "ERROR, #{text}"
+      puts "ERROR: #{text}"
       [500, default_headers('Content-Type'=>'application/json'), [JSON.dump({error: text})]]
     end
   end
@@ -160,7 +157,6 @@ module Pagebox
     end
 
     private
-
       def generate_digest(data)
         require 'openssl' unless defined?(OpenSSL)
         OpenSSL::HMAC.hexdigest(OpenSSL::Digest.const_get(@digest).new, @secret, data)
