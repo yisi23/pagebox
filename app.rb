@@ -34,12 +34,12 @@ def map_origin(path)
 end
 
 
+#enable :sessions
 
-def csrf_token
-  session[:_csrf_token] == SecureRandom.base64(30)
-end
 
 def secret 
+  #cookies[:_csrf_token] ||
+  csrf_token = SecureRandom.base64(30)
   "#{csrf_token}--#{SECRET}"
 end
 

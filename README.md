@@ -97,11 +97,6 @@ When you create and sign permissions **in views**.
 ### Signed params-based
 When you sign params and some of their constant values. Like strong_params but views-based. Feature for 2 version, maybe.
 
-## Can I start using it to make my app super secure NOW?
-The thing is, you **cannot differ XMLHttpRequest from normal browser request**. XHR: 
-`x=new XMLHttpRequest;x.open('get','payments/new');x.send();`
-can read responseText of **any** page because we cannot detect the initiator of the request - was it just a new tab or was it attacker's XSS stealing content. Thus he can read `<meta>` containing any origin_map -> execute any POST authorized with any origin_map. This makes OriginMap technique harder. 
-
 ## XSS in real world? 
 
 Open responsible disclosure page and see bugs disclosed by whitehats. Now double it and this is amount of bugs found by blackhats. They might not be using it right now, but if your app gets popular and it becomes profitable to exploit an XSS - it will punch you. 
