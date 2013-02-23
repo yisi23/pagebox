@@ -1,30 +1,11 @@
 require 'sinatra'
 require './originmap'
+require './preflight'
 require 'securerandom'
 
+SECRET = 'abcd'
 
-class Preflight
-  def initialize(app)
-    @app = app
-  end
 
-  def call(env)
-    heads = {'Access-Control-Allow-Origin' => '*', 
-            'Access-Control-Allow-Headers' => 'Origin-Map,X-CSRF-Token,Content-Type',
-            "X-XSS-Protection" => '0;'}
-   
-    puts 'Received ENV', env
-    # request from sandbox and XHR
-    if env['HTTP_ORIGIN'] == 'null' and env["REQUEST_METHOD"] == 'OPTIONS'
-      [200, heads, ['Access granted!']]
-    else
-      resp = @app.call(env)
-      resp[1].merge!(heads)
-      puts 'response', resp[1]
-      resp
-    end
-  end
-end
 
 =begin
 
@@ -41,12 +22,7 @@ if env['QUERY_STRING'].include?('origin_map=')
       end
 =end
 
-SECRET = 'abcd'
-default_headers = {
-  "Content-Security-Policy" => 'sandbox;',
-}
-
-
+# URL -based
 def map_origin(path)
   case path
 
@@ -63,13 +39,18 @@ def csrf_token
   session[:_csrf_token] == SecureRandom.base64(30)
 end
 
+def secret 
+  "#{csrf_token}--#{SECRET}"
+end
+
 def layout(body)
   return r=<<HTML
 <!doctype html>
 <html>
 <head>
+<script src="/origin_map.js"></script>
 <title>OriginMap demo</title>
-#{@OMap.meta_tag}
+#{@omap.meta_tag}
 </head>
 <body>
 <h1>OriginMap</h1>
@@ -77,6 +58,9 @@ def layout(body)
 </body>
 </html>
 HTML
+end
+
+before do
 end
 
 get '/payments/new' do
@@ -99,9 +83,7 @@ get '/about' do
   headers["Content-Security-Policy"]=val
   headers["X-WebKit-CSP"]=val
 
-  secret = "#{csrf_token}--#{SECRET}"
-  @OMap = OriginMap::Container.new(secret)
-  @OMap.data = {url: request.path}
+  @omap.permit! :static
   layout r=<<HTML
 <script type="text/javascript">
 window.onload=function(){
