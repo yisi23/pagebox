@@ -51,7 +51,6 @@ I don't know how to fix it but I really want to make pagebox technique work. **I
 <meta name="pagebox" content="WyJkZWZhdWx0Iiwic3RhdGljIl0=--c8303f09f8a5e2ac9b70d5b4dbdc44ca25c97c8a">
 ```
 HMAC, signed same way as Rails cookie.
-With each request server side checks something like `if current_page_permissions.include?(:following)` or with more handy DSL.
 
 ## Attack Surface.
 Before any XSS could pwn the entire website:
@@ -123,9 +122,7 @@ When you sign params and some of their constant values. Like strong_params but v
 
 Open any big website "Responsible disclosure" page, look at the bugs disclosed by whitehats. Now double it and see the amount of bugs found by blackhats. They might not be using it right now, but if your app gets popular and it becomes profitable to exploit an XSS - it will punch you. 
 
-Doesn't it sound funny to let your customers lose money/be spamed because of XSS on the page you don't even remember about? 
-
-Pagebox protection - is investment in your current and future website safety.
+Pagebox protection - is investment in website safety.
 
 # P.S. Pagebox 2.0 as view-based business logic. (a possible feature)
 Here is another sweet feature: it can change the way you write business logic. Template can look like this:
