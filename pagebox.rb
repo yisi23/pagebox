@@ -17,10 +17,7 @@ module Pagebox
     end
 
     def generate
-      
-      puts 'teeeest', verify(@verifier.generate(@data))
       @verifier.generate(@data)
-
     end
 
     def to_s
@@ -42,11 +39,7 @@ module Pagebox
     def <<(*vals)
       @data.push *vals
     end
-
   end
-
-
-
 
   class Preflight
     def initialize(app)
@@ -59,26 +52,25 @@ module Pagebox
       #puts 'Received ENV', env
       if env["REQUEST_METHOD"] == 'OPTIONS'
         # XHR preflight - Allow anything
-        puts 'Preflight XHR'
-        return [200, permit_headers, ['Access granted!']]
+        puts "Allow XHR"
+        return [200, permit_headers({}), ['Access granted!']]
       else
         # actual request (GET/POST) can be XHR or normal browser navigation
-
-
+        puts "Cookie received #{request.cookies}"
         pagebox_token = request.cookies["pagebox_token"] || begin
+          puts 'set new cookie'
           set_token = true
           SecureRandom.base64(30)
         end
-
         pagebox_secret = "#{pagebox_token}--#{PAGEBOX_SECRET}"
-        puts "CURRENT SECRET IS #{pagebox_secret}"
-
         env['pagebox'] = Box.new(pagebox_secret)
-        signed_pagebox = env["HTTP_PAGEBOX"] || request.params['pagebox']
+        puts "Now use #{pagebox_secret} secret"
 
-        permitted = if signed_pagebox
+        input_pagebox = env["HTTP_PAGEBOX"] || request.params['pagebox']
+
+        permitted = if input_pagebox
           begin
-            env['pagebox'].verify(signed_pagebox.to_s)
+            env['pagebox'].verify(input_pagebox.to_s)
             puts 'loaded pagebox', env['pagebox'].data
             permitted_list = env['pagebox'].data
             permit?(request, env['pagebox'])
@@ -100,28 +92,33 @@ module Pagebox
           if permitted
             response = @app.call(env)
           else
-            return error(signed_pagebox ? 
+            return error(input_pagebox ? 
               "Pagebox provided but doesn't permit this action. Allowed: #{permitted_list}" : 
               "Pagebox not found")
           end
         end
+
+      
         rr = Rack::Response.new(response[2],response[0],response[1])
-        
+
+        default_headers(rr.headers)
         # allow XHR to read response if permitted
-        rr.headers.merge!(permit_headers) if permitted
-        
+        permit_headers(rr.headers) if permitted
+
 
         rr.set_cookie("pagebox_token",
                           value: pagebox_token,
                           path: "/",
                           httponly: true) if set_token
+        puts "final headers #{rr.headers}"
 
         return rr
       end
     end
 
     def error(text)
-      [500, default_headers.merge('Content-Type'=>'application/json'), [JSON.dump({error: text})]]
+      puts "ERROR, #{text}"
+      [500, default_headers('Content-Type'=>'application/json'), [JSON.dump({error: text})]]
     end
   end
 

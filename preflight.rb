@@ -12,20 +12,18 @@ class Preflight < Pagebox::Preflight
     end
   end
 
-  def default_headers
+  def default_headers(h)
     val = 'Sandbox allow-scripts allow-top-navigation allow-forms allow-popups'
 
-    {
-      "X-XSS-Protection" => '0;',
-      "Content-Security-Policy" => val,
-      "X-WebKit-CSP" => val
-    }
+    h["Content-Security-Policy"] = val
+    h["X-WebKit-CSP"] = val
+    h
   end
-  def permit_headers
-    default_headers.merge({
-      'Access-Control-Allow-Origin' => '*', 
-      'Access-Control-Allow-Headers' => 'Cookie,Origin-Map,X-CSRF-Token,Content-Type'
-    })
+  
+  def permit_headers(h)    
+    h['Access-Control-Allow-Origin'] = '*' 
+    h['Access-Control-Allow-Headers'] = 'accept, origin, x-requested-with, content-type,pagebox,Cookie,X-CSRF-Token'
+    h
   end
   
 end

@@ -10,7 +10,7 @@ before do
   @pb = request.env['pagebox']
 end
 
-
+disable :protection
 enable :sessions
 
 def layout(body)
@@ -49,17 +49,22 @@ get '/about' do
   @pb << :static
 
   layout r=<<HTML
-  This is about page, you cannot pay from here
-<script type="text/javascript">
-window.onload=function(){
+  This is /about page, you are not supposed to pay from here. This page is XSS vulnerable. Try to pay from here using js console
 
-/*
+<pre>
 x=new HttpRequest;
-x.open('get','payments/new?omap=adsf');
-x.send('ffffff');
-*/
-}
+x.open('get','payments/new');
+x.setRequestHeader('Pagebox',pagebox());
+x.send();
 
-</script>
+<iframe src="/payments/new"></iframe>
+
+x=window.open('/payments')
+
+<form method="post" action="/payments">
+<input name="pagebox" value="@pb.generate">
+</form>
+
+</pre>
 HTML
 end
