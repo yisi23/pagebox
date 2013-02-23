@@ -11,6 +11,8 @@ When we find XSS at `/some_path` we can make authorized requests and read respon
 ## Sandboxed pages
 The idea I want to implement is to make every page **independent and secure** from others, potentionally vulnerable pages located on the same domain. To make website work developer creates a pagebox - he connects **page origins** with **what they are allowed / supposed to do**. 
 
+![frames](http://f.cl.ly/items/1l2I1s1o2U3t2y39050p/Screen%20Shot%202013-02-24%20at%203.51.27%20AM.png)
+
 Pagebox **splits** the entire website into many sandboxed pages with unique origins. Every page is not accessible from other pages unless developer allowed it explicitly - you simply **cannot** `window.open/<iframe>` other pages on the same domain and extract `document.body.innerHTML` because of the CSP header: `Sandbox`. It disallows all DOM interactions - use `postMessage` instead.
 
 ![frames](http://f.cl.ly/items/3i152w2l243d2W1r0K3P/sameorig.png)
