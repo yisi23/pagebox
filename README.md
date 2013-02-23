@@ -2,16 +2,13 @@
 
 ![XHR](http://f.cl.ly/items/0y3n0a3C261X2Y3X1V2q/demo%20\(1\).png)
 
-OriginMap is a revolutionary technique (trust me im [an infosec engineer](http://homakov.blogspot.com)) which can dramatically improve XSS protection and overall access restrictions for huge, complex and multi-layer websites.
+**OriginMap** is a revolutionary technique for **bulletproof web applications** (trust me im [an infosec engineer](http://homakov.blogspot.com)) which can dramatically improve XSS protection and overall access restrictions for huge, complex and multi-layer websites.
 
-**OriginMap** is a technique for **bulletproof web applications**. Web is not perfect, far from perfect: [Cookies](http://homakov.blogspot.com/2013/02/rethinking-cookies-originonly.html), [Clickjacking](http://homakov.blogspot.com/2012/06/saferweb-with-new-features-come-new.html), [Frame navigation](http://homakov.blogspot.com/2013/02/cross-origin-madness-or-your-frames-are.html), [CSRF](http://homakov.blogspot.com/2012/03/hacking-skrillformer-moneybookers.html) etc
-Speaking about XSS web is **just broken**.
+Web is not perfect, far from perfect: [Cookies](http://homakov.blogspot.com/2013/02/rethinking-cookies-originonly.html), [Clickjacking](http://homakov.blogspot.com/2012/06/saferweb-with-new-features-come-new.html), [Frame navigation](http://homakov.blogspot.com/2013/02/cross-origin-madness-or-your-frames-are.html), [CSRF](http://homakov.blogspot.com/2012/03/hacking-skrillformer-moneybookers.html) etc
 
-When we find XSS at `/some_path` we can make authorized requests and read responses from **anywhere on the whole website** on this domain. 
+When we find XSS at `/some_path` we can make authorized requests and read responses from **anywhere on the whole website** on this domain. XSS on `/about`, which is just a static page not using server side at all **leads to stolen money on `/withdraw`.**
 
-XSS on `/about`, which is just a static page not using server side at all **leads to stolen money on `/withdraw`.**
-
-**This is not cool.**
+**This is not cool. We can fix it.**
 ## Next level of XSS protection: Page Scope
 The idea I'm implementing is to make every page **independent and secure** from others, potentionally vulnerable pages located on the same domain. To make website work developer creates an origin map - he connects **page origins** with **what they are allowed to do**. 
 
