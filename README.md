@@ -1,4 +1,4 @@
-[# Pagebox — website gatekeeper, description](http://homakov.blogspot.com/2013/02/pagebox-website-gatekeeper.html)
+[Pagebox — website gatekeeper. Blogpost with description.](http://homakov.blogspot.com/2013/02/pagebox-website-gatekeeper.html)
 
 # FAQ
 
