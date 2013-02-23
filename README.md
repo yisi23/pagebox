@@ -17,9 +17,11 @@ XSS on `/about`, which is just a static page not using server side at all **lead
 ## Next level of XSS protection: Page Scope
 The idea I'm implementing is to make every page **independent and secure** from others, potentionally vulnerable pages located on the same domain. To make website work developer creates an origin map - he connects **page origins** with **what they are allowed to do**. 
 
-OriginMap **splits** the entire website into many pages with unique origins. Every page is not accessible from other pages unless developer allowed it explicitly - you simply **cannot** `window.open/<iframe>` other pages on the same domain to extract `document.body.innerHTML` because of header CSP: Sandbox.
+OriginMap **splits** the entire website into many pages with unique origins. Every page is not accessible from other pages unless developer allowed it explicitly - you simply **cannot** `window.open/<iframe>` other pages on the same domain and extract `document.body.innerHTML` because of the header CSP: `Sandbox`. It disallows all "samedomain" interactions - use a secure technique `postMessage` instead.
 
-Also every page contains additional origin map container in `<meta>` tag (Implementations of the concept can vary, this is how Rails adds csrf tokens), and sends it along with every `XMLHttpRequest` and `<form>` submission. It is **signed serialized object** (e.g. JSON)  containing various values.
+![frames](http://f.cl.ly/items/3i152w2l243d2W1r0K3P/sameorig.png)
+
+Also every page contains additional origin map Container in `<meta>` tag (Implementations of the concept can vary, this is how Rails adds csrf tokens), and sends it along with every `XMLHttpRequest` and `<form>` submission. It is **a signed serialized object** (e.g. with JSON)  containing various values. **Meta tag contains signed information about what was permitted for this URL.**
 
 It can be: `url` property - original page URL (not `location.href` which can be compromised with history.pushState), `perms` - permissions granted for this page and `params` - restricting specific params values to simplify server-side business logic. 
 
@@ -28,24 +30,7 @@ It can be: `url` property - original page URL (not `location.href` which can be 
 
 Server side checks container integrity and authorizes request if permission was granted.
 
-## Interactions
-
-Frames and windows same-origin demo - Sandbox CSP header denies all same-domain interaction, use postMessage instead:
-
-![frames](http://f.cl.ly/items/3i152w2l243d2W1r0K3P/sameorig.png)
-
-Permitted origins demo - how meta tag has information on what was permitted to this URL.
-
 ![permitted URLs](http://f.cl.ly/items/2s2B060O1d0N1D3b0U1B/somthn%20\(1\).png)
-
-## Attack Surface.
-Now any XSS pwns the entire website:
-
-1 page surface * amount of all pages.
-
-With OriginMap XSS can only pwn functionaly available for XSS-ed page: 
-
-1 page surface * amount of pages that serve given functionality.
 
 ## Signature
 ```
@@ -55,6 +40,15 @@ Where SIGNATURE is HMAC, signed same way as Rails cookie.
 With each request server side will check something like `if current_page_permissions.include?(:following)` or with more handy DSL.
 
 # FAQ
+### Attack Surface.
+Before any XSS could pwn the entire website:
+
+`1 page surface * amount of all pages.`
+
+With OriginMap XSS can only pwn functionaly available for XSS-ed page: 
+
+`1 page surface * amount of pages that serve given functionality.`
+
 ### Content Security Policy
 
 OriginMap takes adventadge of it. But CSP on itself is not panacea from XSS: DOM XSS (there are always a lot of ways to insert HTML leading to execution), [JSONP bypasses](http://homakov.blogspot.com/2013/02/are-you-sure-you-use-jsonp-properly.html)
