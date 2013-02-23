@@ -1,5 +1,5 @@
 require 'sinatra'
-require './originmap'
+require './pagebox'
 require './preflight'
 require 'securerandom'
 
@@ -79,9 +79,7 @@ end
 
 
 get '/about' do
-  val = 'Sandbox allow-scripts allow-top-navigation allow-forms'
-  headers["Content-Security-Policy"]=val
-  headers["X-WebKit-CSP"]=val
+  @omap = request.env['omap']
 
   @omap.permit! :static
   layout r=<<HTML

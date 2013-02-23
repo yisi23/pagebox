@@ -1,8 +1,8 @@
 /* BOOBS */
 HttpRequest = XMLHttpRequest;
 
-window.getOmap = function(decode){
-  var meta = document.getElementsByName('omap')[0];
+window.pagebox = function(decode){
+  var meta = document.getElementsByName('pagebox')[0];
   if(meta){
     var meta = meta.content;
     if(decode){
@@ -13,7 +13,7 @@ window.getOmap = function(decode){
     }
   }else{
     // not found
-    console.log('omap meta tag not found');
+    console.log('pagebox meta tag not found');
     return false;
   }
 }

@@ -1,7 +1,7 @@
 require 'json'
 require 'base64'
 
-module OriginMap
+module Pagebox
 
   class Container
     attr_accessor :data
