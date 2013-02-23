@@ -29,7 +29,7 @@ Pagebox can look like: `["follow", "write_message", "read_messages", "edit_accou
 ![permitted URLs](http://f.cl.ly/items/2s2B060O1d0N1D3b0U1B/somthn%20\(1\).png)
 
 # Problems
-Now page can only submit forms, but XHR CORS doesn't work properly, perhaps because nobody knew we will try it in such way. I'm stuck with XHR-with-credentials and I need your help and ideas. 
+Now page can only submit forms, but XHR CORS doesn't work properly - nobody knew we will try it in such way. I'm stuck with XHR-with-credentials and I need your help and ideas. 
 
 1) Every page is sandboxed and we cannot put 'allow-same-origin' to avoid DOM interactions
 
