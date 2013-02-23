@@ -4,15 +4,14 @@
 
 OriginMap is a revolutionary technique (trust me im [an infosec engineer](http://homakov.blogspot.com)) which can dramatically improve XSS protection and overall access restrictions for huge, complex and multi-layer websites.
 
-## Summary
-**OriginMap** is a conception of a **bulletproof web application**. Web is not perfect. Our web is far from perfect: [Cookies](http://homakov.blogspot.com/2013/02/rethinking-cookies-originonly.html), [Clickjacking](http://homakov.blogspot.com/2012/06/saferweb-with-new-features-come-new.html), [Frame navigation](http://homakov.blogspot.com/2013/02/cross-origin-madness-or-your-frames-are.html), [CSRF](http://homakov.blogspot.com/2012/03/hacking-skrillformer-moneybookers.html) etc
+**OriginMap** is a technique for **bulletproof web applications**. Web is not perfect, far from perfect: [Cookies](http://homakov.blogspot.com/2013/02/rethinking-cookies-originonly.html), [Clickjacking](http://homakov.blogspot.com/2012/06/saferweb-with-new-features-come-new.html), [Frame navigation](http://homakov.blogspot.com/2013/02/cross-origin-madness-or-your-frames-are.html), [CSRF](http://homakov.blogspot.com/2012/03/hacking-skrillformer-moneybookers.html) etc
 Speaking about XSS web is **just broken**.
 
 When we find XSS at `/some_path` we can make authorized requests and read responses from **anywhere on the whole website** on this domain. 
 
 XSS on `/about`, which is just a static page not using server side at all **leads to stolen money on `/withdraw`.**
 
-**This is wrong.**
+**This is not cool.**
 ## Next level of XSS protection: Page Scope
 The idea I'm implementing is to make every page **independent and secure** from others, potentionally vulnerable pages located on the same domain. To make website work developer creates an origin map - he connects **page origins** with **what they are allowed to do**. 
 
@@ -141,6 +140,7 @@ This will generate such origin map:
 The map allows user to update **only** User with 3532 id and websites with id in (345,346,348). No server side validation is needed anymore - OM is signed with private key and user cannot tamper given map with permitted ids.
 
 This may sound not very secure - **compromise of server_secret == compromise of business logic** but we can polish the idea and take the security risk, cannot we?
+
 
 The whole concept is under heavy development, as well as rack prototype. Please share your thoughts at homakov@gmail.com. 
 
