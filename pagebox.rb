@@ -73,6 +73,7 @@ module Pagebox
             env['pagebox'].verify(input_pagebox.to_s)
             puts 'loaded pagebox', env['pagebox'].data
             permitted_list = env['pagebox'].data
+
             permit?(request, env['pagebox'])
           rescue MessageVerifier::InvalidSignature
             return error 'Malformed pagebox'
@@ -80,6 +81,9 @@ module Pagebox
         else
           false
         end
+
+        puts "#{permitted} #{request.path} for #{env['pagebox'].data}"
+
 
         # now we clean and build new pagebox
         env['pagebox'].build!
@@ -101,7 +105,8 @@ module Pagebox
       
         rr = Rack::Response.new(response[2],response[0],response[1])
 
-        default_headers(rr.headers)
+
+        default_headers(rr.headers, request.path == '/pageboxproxy')
         # allow XHR to read response if permitted
         permit_headers(rr.headers) if permitted
 

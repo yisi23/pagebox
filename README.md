@@ -112,6 +112,8 @@ Pagebox protection - is investment in your current and future website safety.
 # How it works.
 Goal to not let not scoped POST requests to modify anything and to not allow not scoped GET requests be read with XHR
 
+Current problem - when we do CORS request (request from unique null origin is equal CORS) AND we want to attach credentials (Cookies) we cannot specify Origin on server side as wild card '*', because of specification. Our origin is 'null' so we cannot make any requests with cookies. Thus I created a Pageboxproxy doing just same requests you asked it to do and returning the response in postMessage
+
 # Bonus: Pagebox 2.0 as view-based business logic. (a possible feature)
 Here is another sweet feature: it can change the way you write business logic. Template can look like this:
 ```

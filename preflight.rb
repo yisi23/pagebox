@@ -1,20 +1,20 @@
 class Preflight < Pagebox::Preflight
 
   def permit?(req, pagebox)
-  	puts "permit? #{req.path} for #{pagebox.data}"
-
     case req.path
     when /\A\/payments/
       # serious business.
       pagebox.permit? :payments
     else
-      pagebox.permit? :basic
+      true # pagebox.permit? :basic
     end
   end
 
-  def default_headers(h)
+  def default_headers(h, sameorigin = false)
     #allow-same-origin
     val = 'Sandbox allow-scripts  allow-top-navigation allow-forms allow-popups'
+    val << ' allow-same-origin' if sameorigin
+    val = '' if sameorigin
 
     h["Content-Security-Policy"] = val
     h["X-WebKit-CSP"] = val
@@ -28,7 +28,14 @@ class Preflight < Pagebox::Preflight
     h['Access-Control-Allow-Credentials']='true'
     h
   end
-
-
+  
+=begin
+Second, it can be used to embed content from a third-party site, sandboxed to prevent that site from opening pop-up windows, etc, without preventing the embedded page from communicating back to its originating site, using the database APIs to store data, etc.
+  var x=new XMLHttpRequest;
+  x.open('get','/about');
+  x.setRequestHeader('Pagebox',pagebox())
+  x.withCredentials = true;
+  x.send();
+=end
   
 end

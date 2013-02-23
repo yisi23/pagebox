@@ -29,6 +29,8 @@ def layout(body)
 <script>
 pb_log();
 </script>
+
+<iframe sandbox="allow-scripts  allow-top-navigation allow-forms allow-popups allow-same-origin" src="/pageboxproxy"></iframe>
 </body>
 </html>
 HTML
@@ -69,4 +71,34 @@ x=window.open('/payments')
 
 </pre>
 HTML
+end
+
+
+get '/pageboxproxy' do
+  # do all given in postMessage
+  return r=<<HTML
+<!doctype html>
+<html>
+<head>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+</head>
+<body>
+pb proxy
+<script>
+
+var callbacks = {}
+window.onmessage = function(e){
+  window.e = e;
+  document.write(e.data)
+  var x=new XMLHttpRequest;
+  x.open('get','payments/new');
+  x.withCredentials = true;
+  x.send();
+}
+
+</script>
+</body>
+</html>
+HTML
+
 end
