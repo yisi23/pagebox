@@ -7,7 +7,6 @@ window.pagebox = function(decode){
     var meta = meta.content;
     if(decode){
       return JSON.parse(atob(meta.split('--')[0]));
-
     }else{
       return meta;
     }
@@ -16,6 +15,10 @@ window.pagebox = function(decode){
     console.log('pagebox meta tag not found');
     return false;
   }
+}
+
+window.pb_log = function(){
+  console.log('Pagebox allows: ', pagebox(1).scopes)
 }
 
 

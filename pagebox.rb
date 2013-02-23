@@ -3,13 +3,13 @@ require 'base64'
 
 module Pagebox
 
-  class Container
+  class Box
     attr_accessor :data
 
     def initialize(secret)
       @secret = secret
-      @data = {"scope" => []}
       @verifier = MessageVerifier.new(secret)
+      build!
     end
 
     def verify(signed_message)
@@ -24,9 +24,12 @@ module Pagebox
       @data.inspect
     end
 
+    def build!
+      @data = {"scope" => []}
+    end
+
     def meta_tag
-      v = '<meta name="omap" content="'+generate+'" />'
-      #v.respond_to? :html_safe ? v.html_safe : v 
+      '<meta name="pagebox" content="'+generate+'" />'
     end
 
     def permit?(scope)
@@ -38,6 +41,61 @@ module Pagebox
     end
 
   end
+
+
+
+
+  class Preflight
+    def initialize(app)
+      @app = app
+    end
+
+    def call(env)
+      request = Rack::Request.new(env)
+
+      puts 'Received ENV', env
+      if env['HTTP_ORIGIN'] and env["REQUEST_METHOD"] == 'OPTIONS'
+        # XHR preflight - Allow anything
+        puts 'Preflight XHR'
+        [200, DEFAULT_HEADERS, ['Access granted!']]
+      else
+        # actual request (GET/POST) can be XHR or normal browser navigation
+
+        env['pagebox'] = Pagebox::Box.new(secret)
+        signed_pagebox = env["HTTP_PAGEBOX"] || request.params['pagebox']
+
+        permitted = if signed_pagebox
+          env['pagebox'].verify(pagebox_map)
+          puts 'loaded pagebox', env['pagebox'].data
+          allow?(request, env['pagebox'])
+        else
+          false
+        end
+
+        if env['REQUEST_METHOD'] == 'GET'
+          # READ
+
+          response = @app.call(env)
+        else
+          # WRITE
+          if permitted
+
+          end
+
+        end
+                
+        response[1].merge!(DEFAULT_HEADERS) if permitted
+        puts 'response headers', resp[1]
+        response
+
+      end
+    end
+
+    def error(text)
+      [500, {}, [text]]
+    end
+  end
+
 
 
   # stolen from rails
