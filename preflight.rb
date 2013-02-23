@@ -13,7 +13,8 @@ class Preflight < Pagebox::Preflight
   end
 
   def default_headers(h)
-    val = 'Sandbox allow-scripts allow-top-navigation allow-forms allow-popups'
+    #allow-same-origin
+    val = 'Sandbox allow-scripts  allow-top-navigation allow-forms allow-popups'
 
     h["Content-Security-Policy"] = val
     h["X-WebKit-CSP"] = val
@@ -22,9 +23,12 @@ class Preflight < Pagebox::Preflight
   
   def permit_headers(h)    
     h['Access-Control-Allow-Origin'] = '*' 
+    h['Access-Control-Allow-Methods'] = 'POST,GET,OPTIONS' 
     h['Access-Control-Allow-Headers'] = 'accept, origin, x-requested-with, content-type,pagebox,Cookie,X-CSRF-Token'
     h['Access-Control-Allow-Credentials']='true'
     h
   end
+
+
   
 end
