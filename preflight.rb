@@ -13,6 +13,14 @@ class Preflight < Pagebox::Preflight
       true # pagebox.permit? :basic
     end
   end
+=begin
+  endpoint_map do 
+    get "/:letters/followers.json"
+    post "payments/:digits"
+    post_only
+
+  end
+=end
 
   def default_headers(h, sameorigin = false)
     val = 'Sandbox allow-scripts  allow-top-navigation allow-forms allow-popups'
