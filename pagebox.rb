@@ -1,5 +1,6 @@
 require 'json'
 require 'base64'
+require 'cgi'
 
 module Pagebox
 
@@ -105,8 +106,20 @@ module Pagebox
 
 
         default_headers(rr.headers, request.path == '/pageboxproxy')
+        
         # allow XHR to read response if permitted
-        permit_headers(rr.headers) if permitted
+        # permit_headers(rr.headers) 
+        if permitted and request.params["postback"]
+          body = JSON.dump({
+            body: rr.body[0].gsub('</','<\/'),
+            status: rr.status
+          })
+          body =<<BODY
+<script>if(parent != window) parent.postMessage(#{body},"*");</script>
+BODY
+          return [200, {'content-length' => Rack::Utils.bytesize(body).to_s}, [body]]
+        end
+
 
 
         rr.set_cookie("pagebox_token",

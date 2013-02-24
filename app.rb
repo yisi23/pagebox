@@ -26,17 +26,22 @@ def layout(body)
   <body>
 Hint: JS function pagebox() returns current pagebox, provide it as param "pagebox" or as request header 'Pagebox'
 <form method="post" action="/payments">
-<input name="pagebox" type="hidden" value="@pb.generate">
+<input name="pagebox" type="hidden" value="#{@pb.generate}">
 <input type=submit value="Try POST to /payments">
 </form>
 
+<form method="post" action="/payments?postback=1">
+<input name="pagebox" type="hidden" value="#{@pb.generate}">
+<input type=submit value="Try POST READ to /payments">
+</form>
+
 <form method="post" action="/payments/finish">
-<input name="pagebox" type="hidden" value="@pb.generate">
+<input name="pagebox" type="hidden" value="#{@pb.generate}">
 <input type=submit value="Try POST to /payments/finish">
 </form>
 
 <form method="post" action="/order_pizza">
-<input name="pagebox" type="hidden" value="@pb.generate">
+<input name="pagebox" type="hidden" value="#{@pb.generate}">
 <input type=submit value="Try POST to /order_pizza">
 </form>
 
