@@ -116,6 +116,7 @@ You cannot read data from this frame:<br>
 HTML
 end
 
+=begin
 
 get '/pageboxproxy' do
   # XHR received from postMessage
@@ -145,3 +146,4 @@ window.onmessage = function(e){
 HTML
 
 end
+=end
