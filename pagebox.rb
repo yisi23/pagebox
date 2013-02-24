@@ -120,7 +120,7 @@ module Pagebox
 
     def error(text)
       puts "ERROR: #{text}"
-      [500, default_headers('Content-Type'=>'application/json'), [JSON.dump({error: text})]]
+      [423, default_headers('Content-Type'=>'application/json'), [JSON.dump({error: text})]]
     end
   end
 
