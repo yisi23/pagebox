@@ -158,7 +158,11 @@ BODY
       puts "ERROR: #{text}"
       [423, default_headers('Content-Type'=>'application/json'), [JSON.dump({error: text})]]
     end
-
+  
+    def permit?(request, pagebox)
+      endpoint_permit?(request.request_method, request.path, pagebox.data["url"])
+    end
+  
     def endpoint_permit?(method, target, origin)
       origins = allowed_origins_for(method, target)
 

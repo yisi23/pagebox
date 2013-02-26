@@ -1,13 +1,12 @@
 class Preflight < Pagebox::Preflight
-
-  def permit?(req, pagebox)
-    endpoint_permit?(req.request_method, req.path, pagebox.data["url"])
-  end
-
+  # Request method, Target, Allowed origins
   get %r{/[a-z]+/pay}, ['/payments/new']
+  get '/messages.json', from: [%r{/[a-z]+/private_messages}]
+
   post '/payments', ['/payments/new']
   post '/payments/finish', from: '/payments'
-  get '/messages.json', from: [%r{/[a-z]+/private_messages}]
+
+  add_rule 'PATCH', %r{/payments/\d+/update}, %r{/payments/\d+}
 
 
 
