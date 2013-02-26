@@ -35,26 +35,6 @@ window.onload = pageboxForms
 window.Pagebox = {};
 Pagebox.pagebox = pagebox;
 
-/*
-send
-setRequestHeader
-open
-responseType
-responseText
-response
-readyState=4
-onreadystatechange
-
-x=new Pagebox.XHRProxy()
-x.open('post','/payments')
-x.send('somedataaa')
-
-
-gzip deflate 
-Content-Security-Policy: script-nonce random-value;
-*/
-//(function() {
-
 Pagebox.XHRProxy = function(){
   this.ready = 0;
 }
@@ -121,7 +101,6 @@ function createFrame(id) {
 window.addEventListener('message', function(e) {
   window.e = e;
   var data = e.data; //JSON.parse(e.data);
-  console.log('incoming', data.queue, data.status);
   if(data.pagebox == Pagebox.pagebox()){
     var cur = Pagebox.XHRProxy.pending[parseInt(data.queue)];
     cur.readyState = 4;

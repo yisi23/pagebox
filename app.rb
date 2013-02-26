@@ -19,7 +19,7 @@ def layout(body)
 <html>
   <head>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-    <script src="/pagebox.js"></script>
+    <script src="/peagebox.js"></script>
     <title>Pagebox demo</title>
     #{@pb.meta_tag}
   </head>
@@ -97,6 +97,17 @@ get '/about' do
   layout r=<<HTML
   This is /about page, you are not supposed to pay from here, you can only order pizza.
 <pre>
+<script>
+
+
+x=new HttpRequest;
+x.open('get','/payments/new');
+x.setRequestHeader('Pagebox',pagebox());
+x.withCredentials = true;
+x.send();
+alert(x.responseText);
+
+</script>
 
 This XHR doesnt send cookies :(
 <br>
@@ -108,7 +119,7 @@ x.withCredentials = true;
 x.send();
 </textarea>
 <br>
-<button onclick="eval(execute.innerHTML)">Run!</button>
+<button onclick="window.eval(execute.innerHTML)">Run!</button>
 
 You cannot read data from this frame:<br> 
 <iframe src="/payments/new"></iframe>

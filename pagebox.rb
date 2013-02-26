@@ -2,6 +2,10 @@ require 'json'
 require 'base64'
 require 'cgi'
 require 'stringio'
+
+#rake pagebox:install
+#rake pagebox:endpoints
+
 module Pagebox
 
   class Box
@@ -175,7 +179,7 @@ BODY
 
     def allowed_origins_for(method, target)
       @@rules.each do |rule|
-        if rule[0] == method and match?(target, rule[1])
+        if (rule[0] == method or method == '*') and match?(target, rule[1])
           return rule[2]
         end
       end
