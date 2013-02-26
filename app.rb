@@ -30,7 +30,7 @@ Hint: JS function pagebox() returns current pagebox, provide it as param "pagebo
 <input type=submit value="Try POST to /payments">
 </form>
 
-<form method="post" action="/payments?postback=1">
+<form method="post" action="/payments">
 <input name="pagebox" type="hidden" value="#{@pb.generate}">
 <input type=submit value="Try POST READ to /payments">
 </form>
@@ -75,13 +75,11 @@ P.S. Your browser should support Content Security Policy<br>'
 end
 
 get '/payments/new' do
-  @pb << :payments
-
   layout("This is payment page, feel free to pay from here - POST to /payments. You cannot order pizza from here, no way!!!")
 end
 
 post '/payments' do
-  @pb << :finish
+  #@pb << :finish
   layout "PAID"
 end
 
@@ -95,7 +93,6 @@ end
 
 
 get '/about' do
-  @pb << :order_pizza
 
   layout r=<<HTML
   This is /about page, you are not supposed to pay from here, you can only order pizza.

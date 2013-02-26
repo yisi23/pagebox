@@ -7,9 +7,8 @@ module Pagebox
   class Box
     attr_accessor :data
 
-    def initialize(secret, token = nil)
+    def initialize(secret)
       @secret = secret
-      @token = token
       @verifier = MessageVerifier.new(@secret)
       build!
     end
@@ -29,7 +28,7 @@ module Pagebox
     def build!
       @data = {
         "scope" => ["default"],
-        "token" => @token,
+        "token" => nil,
         "url" => nil
       }
     end
@@ -48,6 +47,7 @@ module Pagebox
   end
 
   class Preflight
+
     def initialize(app)
       @app = app
     end
@@ -68,7 +68,7 @@ module Pagebox
           SecureRandom.base64(30)
         end
         pagebox_secret = "#{pagebox_token}--#{PAGEBOX_SECRET}"
-        env['pagebox'] = Box.new(pagebox_secret, pagebox_token)
+        env['pagebox'] = Box.new(pagebox_secret)
         puts "Now use #{pagebox_secret} secret"
 
         input_pagebox = env["HTTP_PAGEBOX"] || request.params['pagebox']
@@ -82,14 +82,14 @@ module Pagebox
             _pageboxqueue = request.params["_pageboxqueue"] #XHRProxy
 
             if _pageboxqueue
-              #queueueueueueueueueueueueeeueuueue
               env['rack.input'] = Rack::Lint::InputWrapper.new(StringIO.new(request.params['body']))
               env['CONTENT_LENGTH'] = Rack::Utils.bytesize(request.params['body'])
               env["CONTENT_TYPE"] = request.params['content_type'] if request.params['content_type']
               request = Rack::Request.new(env)
             end
-
-            permitted_list = env['pagebox'].data
+            
+            # we store it to show in error later
+            old_pagebox = env['pagebox'].data
 
             permit?(request, env['pagebox'])
           rescue MessageVerifier::InvalidSignature
@@ -99,11 +99,12 @@ module Pagebox
           false
         end
 
-        puts "Granted #{permitted} #{request.path} for #{env['pagebox'].data}"
+        puts "current rules", JSON.dump(@@rules)
 
         # now we clean and build new pagebox
         env['pagebox'].build!
         env['pagebox'].data['url'] = request.path
+        env['pagebox'].data['token'] = pagebox_token
 
         if env['REQUEST_METHOD'] == 'GET'
           # READ
@@ -114,7 +115,7 @@ module Pagebox
             response = @app.call(env)
           else
             return error(input_pagebox ? 
-              "Pagebox provided but doesn't permit this action. Allowed: #{permitted_list}" : 
+              "Pagebox provided but URL is not included in allowed origins: #{allowed_origins_for(request.request_method, request.path)}. Pagebox: #{old_pagebox}" : 
               "Pagebox was not found")
           end
         end
@@ -157,6 +158,50 @@ BODY
       puts "ERROR: #{text}"
       [423, default_headers('Content-Type'=>'application/json'), [JSON.dump({error: text})]]
     end
+
+    def endpoint_permit?(method, target, origin)
+      origins = allowed_origins_for(method, target)
+
+      if origins.nil? 
+        true # permit-by-default
+      else
+        origins.any?{|rule_origin| match?(origin, rule_origin)}
+      end
+    end
+
+    def allowed_origins_for(method, target)
+      @@rules.each do |rule|
+        if rule[0] == method and match?(target, rule[1])
+          return rule[2]
+        end
+      end
+      nil
+    end
+
+    def match?(static, dynamic)
+      dynamic.is_a?(Regexp) ? dynamic =~ static : dynamic == static
+    end
+
+    def self.get(target, origin)
+      self.add_rule('GET', target, origin)
+    end
+
+    def self.post(target, origin)
+      self.add_rule('POST', target, origin)
+    end
+
+    def self.add_rule(method, target, origin)
+      @@rules ||= []
+      if origin.is_a?(Hash)
+        origin = origin[:from]
+      end
+      if origin.is_a?(String)
+        origin = [origin]
+      end
+      @@rules.push([method, target, origin])
+      puts 'added rule to ', @@rules
+    end
+
   end
 
 

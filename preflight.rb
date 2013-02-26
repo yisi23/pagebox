@@ -1,26 +1,15 @@
 class Preflight < Pagebox::Preflight
 
   def permit?(req, pagebox)
-    case req.path
-    when '/payments/finish'
-      pagebox.permit? :finish
-    when /\A\/payments/
-      # serious business.
-      pagebox.permit? :payments
-    when '/order_pizza'
-      pagebox.permit? :order_pizza
-    else
-      true # pagebox.permit? :basic
-    end
+    endpoint_permit?(req.request_method, req.path, pagebox.data["url"])
   end
-=begin
-  endpoint_map do 
-    get "/:letters/followers.json"
-    post "payments/:digits"
-    post_only
 
-  end
-=end
+  get %r{/[a-z]+/pay}, ['/payments/new']
+  post '/payments', ['/payments/new']
+  post '/payments/finish', from: '/payments'
+  get '/messages.json', from: [%r{/[a-z]+/private_messages}]
+
+
 
   def default_headers(h, sameorigin = false)
     val = 'Sandbox allow-scripts  allow-top-navigation allow-forms allow-popups'
