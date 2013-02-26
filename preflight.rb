@@ -26,9 +26,12 @@ class Preflight < Pagebox::Preflight
     val = 'Sandbox allow-scripts  allow-top-navigation allow-forms allow-popups'
     val << ' allow-same-origin' if sameorigin
     #val = '' if sameorigin
+    #val << ";script-src 'self' 'unsafe-inline' http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js ;"
+    val<<";report-uri /reportcom"
+    #  script-nonce random-value; CSP from twitter??
+    h["Content-Security-Policy"] = h["X-Content-Security-Policy"] = h["X-WebKit-CSP"] = val
+#reflected-xss
 
-    h["Content-Security-Policy"] = val
-    h["X-WebKit-CSP"] = val
     h
   end
   
@@ -39,6 +42,8 @@ class Preflight < Pagebox::Preflight
     h['Access-Control-Allow-Credentials']='true'
     h
   end
+
+
   
 =begin
 Second, it can be used to embed content from a third-party site, sandboxed to prevent that site from opening pop-up windows, etc, without preventing the embedded page from communicating back to its originating site, using the database APIs to store data, etc.
