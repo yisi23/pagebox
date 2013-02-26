@@ -133,7 +133,8 @@ module Pagebox
             body: rr.body[0],
             status: rr.status,
             pagebox: input_pagebox,
-            queue: _pageboxqueue
+            queue: _pageboxqueue,
+            responseType: rr.headers['Content-Type']
           })
           body =<<BODY
 <script>if(parent != window) parent.postMessage(#{body.gsub('<','\u003C')},"*");</script>
@@ -150,17 +151,6 @@ BODY
         
         rr
       end
-    end
-
-    def override_env(env, new_env)
-      method = new_env['method'].upcase
-      env['REQUEST_METHOD'] = method if %w{POST GET}.include? method
-
-      env['REQUEST_METHOD'] = method if %w{POST GET}.include? method
-
-      env['rack.input'] = StringIO.new(new_env['body'])
-
-      return env
     end
 
     def error(text)

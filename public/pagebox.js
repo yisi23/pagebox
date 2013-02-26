@@ -97,6 +97,8 @@ Pagebox.XHRProxy.prototype.setRequestHeader = function(header,value){
   }
 }
 
+Pagebox.XHRProxy.prototype.getAllResponseHeaders = function(){}
+
 Pagebox.XHRProxy.prototype.send = function(body){
   this.frame = createFrame(Pagebox.XHRProxy.queue++);
   this.pageboxqueue_input.value = Pagebox.XHRProxy.queue;
@@ -124,6 +126,7 @@ window.addEventListener('message', function(e) {
     var cur = Pagebox.XHRProxy.pending[parseInt(data.queue)];
     cur.readyState = 4;
     cur.status = data.status;
+    cur.responseType = data.responseType;
     cur.response = cur.responseText = cur.responseXML = data.body;
     cur.frame.parentElement.removeChild(cur.frame);
     //document.body.removeChild(cur.formproxy);
